@@ -1,29 +1,29 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+.cproject
+.project
+.settings/*
+CMakeCache.txt
+CMakeFiles/
+FTP/.cproject
+FTP/.project
+FTP/.settings/
+Makefile
+TestFTP.xml
+TestFTP/.cproject
+TestFTP/.project
+TestFTP/.settings/*
+TestFTP/CMakeCache.txt
+TestFTP/CMakeFiles/*
+TestFTP/Makefile
+TestFTP/bin/*
+TestFTP/cmake_install.cmake
+TestFTP/coverage/*
+cmake_install.cmake
+lib/*
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+#Windows
+.vs/*
+FTP.suo
+FTP/FTP_VS14.vcxproj.user
+FTP_VS14.VC.db
+TestFTP/LastCoverageResults.log
+TestFTP/TestFTP_VS14.vcxproj.user
