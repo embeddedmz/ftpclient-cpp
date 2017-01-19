@@ -204,8 +204,8 @@ protected:
    // Curl Debug informations
    #ifdef DEBUG_CURL
    static int DebugCallback(CURL* curl, curl_infotype curl_info_type, char* strace, size_t nSize, void* pFile);
-   inline void StartCurlDebug();
-   inline void EndCurlDebug();
+   inline void StartCurlDebug() const;
+   inline void EndCurlDebug() const;
    #endif
 
    std::string          m_strUserName;
@@ -242,7 +242,7 @@ protected:
 private:
    #ifdef DEBUG_CURL
    static std::string s_strCurlTraceLogDirectory;
-   std::ofstream      m_ofFileCurlTrace;
+   mutable std::ofstream      m_ofFileCurlTrace;
    #endif
 };
 
@@ -257,7 +257,7 @@ private:
                                           " Use InitSession() before."
 #define LOG_ERROR_CURL_REMOVE_FORMAT      "[FTPClient][Error] Unable to remove file %s (Error = %d | %s)."
 #define LOG_ERROR_CURL_VERIFYURL_FORMAT   "[FTPClient][Error] Unable to connect to the remote folder %s (Error = %d | %s)."
-#define LOG_ERROR_CURL_FILETIME_FORMAT    "[FTPClient][Error] Unable to get File %s 's time (Error = %d | %s)."
+#define LOG_ERROR_CURL_FILETIME_FORMAT    "[FTPClient][Error] Unable to get file %s's info (Error = %d | %s)."
 #define LOG_ERROR_CURL_GETFILE_FORMAT     "[FTPClient][Error] Unable to import remote File %s/%s (Error = %d | %s)."
 #define LOG_ERROR_CURL_UPLOAD_FORMAT      "[FTPClient][Error] Unable to upload file %s (Error = %d | %s)."
 #define LOG_ERROR_CURL_FILELIST_FORMAT    "[FTPClient][Error] Unable to connect to remote folder %s (Error = %d | %s)."
@@ -267,8 +267,8 @@ private:
 #define LOG_ERROR_CURL_RMDIR_FORMAT       "[FTPClient][Error] Unable to remove directory %s (Error = %d | %s)."
 
 #define LOG_ERROR_FILE_UPLOAD_FORMAT      "[FTPClient][Error] Unable to open local file %s in CFTPClient::UploadFile()."
-#define LOG_ERROR_FILE_GETFILE_FORMAT     "[FTPClient][Error] Unable to open local file %s in CFTPClient::GetFile()."
+#define LOG_ERROR_FILE_GETFILE_FORMAT     "[FTPClient][Error] Unable to open local file %s in CFTPClient::DownloadFile()."
 #define LOG_ERROR_DIR_GETWILD_FORMAT      "[FTPClient][Error] %s is not a directory or it doesn't exist " \
-                                          "in CFTPClient::GetWildcard()."
+                                          "in CFTPClient::DownloadWildcard()."
 
 #endif

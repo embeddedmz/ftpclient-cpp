@@ -827,7 +827,6 @@ const bool CFTPClient::UploadFile(const std::string& strLocalFile,
    /* get the file size of the local file */ 
    if (stat(strLocalFile.c_str(), &file_info) == 0)
    {
-
       InputFile.open(strLocalFile, std::ifstream::in | std::ifstream::binary);
       if (!InputFile)
       {
@@ -1303,7 +1302,7 @@ int CFTPClient::DebugCallback(CURL* curl , curl_infotype curl_info_type, char* p
    return 0;
 }
 
-void CFTPClient::StartCurlDebug()
+void CFTPClient::StartCurlDebug() const
 {
    if (!m_ofFileCurlTrace.is_open())
    {
@@ -1330,7 +1329,7 @@ void CFTPClient::StartCurlDebug()
    }
 }
 
-void CFTPClient::EndCurlDebug()
+void CFTPClient::EndCurlDebug() const
 {
    if (m_ofFileCurlTrace && m_ofFileCurlTrace.is_open())
    {
