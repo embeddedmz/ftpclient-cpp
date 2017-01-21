@@ -121,12 +121,14 @@ public:
    inline void* GetProgressFnCallbackOwner() const { return m_ProgressStruct.pOwner; }
    inline const std::string& GetProxy() const { return m_strProxy; }
    inline const int GetTimeout() const { return m_iCurlTimeout; }
+   inline const unsigned GetPort() const { return m_uPort; }
    inline const bool GetActive() { return m_bActive; }
    inline const bool GetNoSignal() const { return m_bNoSignal; }
    inline const std::string& GetURL()      const { return m_strServer; }
    inline const std::string& GetUsername() const { return m_strUserName; }
    inline const std::string& GetPassword() const { return m_strPassword; }
-   inline const unsigned char GetFlags() const { return m_eSettingsFlags; }
+   inline const unsigned char GetSettingsFlags() const { return m_eSettingsFlags; }
+   inline const FTP_PROTOCOL GetProtocol() const { return m_eFtpProtocol; }
 
    // Session
    const bool InitSession(const std::string& strHost,
