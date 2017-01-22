@@ -17,6 +17,7 @@ TestFTP/Makefile
 TestFTP/bin/*
 TestFTP/cmake_install.cmake
 TestFTP/coverage/*
+TestFTP/Wildcard/*
 cmake_install.cmake
 lib/*
 
