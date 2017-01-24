@@ -57,8 +57,10 @@ FTPClient.DownloadFile("C:\\downloaded_info.txt", "info.txt");
 
 To download a whole directory with the wildcard '*' :
 
+```cpp
 /* download all the elements of ftp://127.0.0.1:21/pictures/ to WildcardTest/ */
 FTPClient.DownloadWildcard("/home/amine/WildcardTest", "pictures/*");
+```
 
 To upload and remove a file :
 
