@@ -66,7 +66,7 @@ To upload and remove a file :
 
 ```cpp
 /* upload C:\test_upload.txt to  ftp://127.0.0.1:21/upload/documents/test_upload.txt */
-/* if /upload/documents/ doesn't exist, you can set the third bCreateDir to true
+/* if /upload/documents/ doesn't exist, you can set the third parameter bCreateDir to true
 to create missing directories */
 FTPClient.UploadFile("C:\\test_upload.txt", "/upload/documents/test_upload.txt");
 
@@ -85,7 +85,7 @@ std::string strList;
 FTPClient.List("/", strList);
 ```
 
-To request a file remote size and mtime:
+To request a remote file's size and mtime:
 
 ```cpp
 /* create a helper object to receive file's info */
@@ -100,7 +100,7 @@ cout << ResFileInfo.dFileSize << endl; // file size of "/info.txt"
 cout << ResFileInfo.tFileMTime << endl; // file mtime (epoch) of "/info.txt"
 ```
 
-Always check that the methods above returns true, otherwise, that means that  the request wasn't properly
+Always check that the methods above return true, otherwise, that means that  the request wasn't properly
 executed.
 
 Finally cleanup can be done automatically if the object goes out of scope. If the log printing is enabled,
@@ -131,19 +131,19 @@ The unit tests "TestDownloadFile" and "TestUploadAndRemoveFile" demonstrate how 
 
 A mutex is used to increment/decrement atomically the count of CFTPClient objects.
 
-`curl_global_init` is called when the count reaches one and `curl_global_cleanup` is called when the counter
-become zero.
+`curl_global_init` is called when the count of CFTPClient objects equals to zero (when instanciating the first object).
+`curl_global_cleanup` is called when the count of CFTPClient objects become zero (when all CFTPClient objects are destroyed).
 
 Do not share CFTPClient objects across threads as this would mean accessing libcurl handles from multiple threads
 at the same time which is not allowed.
 
-The method SetNoSignal can be set to skip all signal handling. This is important in multi-threaded applications as DNS
+The method SetNoSignal can be used to skip all signal handling. This is important in multi-threaded applications as DNS
 resolution timeouts use signals. The signal handlers quite readily get executed on other threads.
 
 ## HTTP Proxy Tunneling Support
 
 An HTTP Proxy can be set to use for the upcoming request.
-To specify a port number, append :[port] to the end of the host name. If not specified, `libcurl` will default to using port 1080 for proxies. The proxy string may be prefixed with `http://` or `https://`. If no HTTP(S) scheme is specified, the address provided to `libcurl` will be prefixed with `http://` to specify an HTTP proxy. A proxy host string can embedded user + password.
+To specify a port number, append :[port] to the end of the host name. If not specified, `libcurl` will default to using port 1080 for proxies. The proxy string may be prefixed with `http://` or `https://`. If no HTTP(S) scheme is specified, the address provided to `libcurl` will be prefixed with `http://` to specify an HTTP proxy. A proxy host string can embed user + password.
 The operation will be tunneled through the proxy as curl option `CURLOPT_HTTPPROXYTUNNEL` is enabled by default.
 A numerical IPv6 address must be written within [brackets].
 
@@ -157,7 +157,7 @@ FTPClient.List("/", strList);
 ```
 
 ## Installation
-You will need CMake to generate a makefile for the static library to build the tests or the code coverage 
+You will need CMake to generate a makefile for the static library or to build the tests/code coverage 
 program.
 
 Also make sure you have libcurl and Google Test installed.
@@ -199,7 +199,7 @@ To run it, you must indicate the path of the INI conf file (see the section belo
 [simpleini](https://github.com/brofield/simpleini) is used to gather unit tests parameters from
 an INI configuration file. You need to fill that file with FTP and/or SFTP parameters.
 You can also disable some tests (HTTP proxy for instance) and indicate
-parameters only for the enabled tests. A template of the INI file exists already under TestFTP/
+parameters only for the enabled tests. A template of the INI file already exists under TestFTP/
 
 
 Example : (Run only FTP tests)
