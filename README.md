@@ -186,6 +186,67 @@ To directly run the unit test binary, you must indicate the path of the INI conf
 ./[Debug|Release]/bin/test_ftpclient /path_to_your_ini_file/conf.ini
 ```
 
+### Building under Windows via Visual Studio
+
+This can be enhanced in future...
+
+First of all, build libcurl using this fork of build-libcurl-windows : https://github.com/ribtoks/build-libcurl-windows
+
+In fact, this fork will allow you to build libcurl under Visual Studio 2017.
+
+```Shell
+git clone https://github.com/ribtoks/build-libcurl-windows.git
+```
+
+Then just build libcurl using :
+
+```Shell
+build.bat
+```
+
+This batch script will automatically download the latest libcurl source code and build it using the most recent Visual Studio compiler
+that it will find on your computer. For a particular version, you can modify the batch script...
+
+Under YOUR_DIRECTORY\build-libcurl-windows\third-party\libcurl, you will find the curl include directory and a lib directory containing different type of libraries : dynamic and static x86 and x64 libraries compiled in Debug and Release mode (8 libraries). Later, we will be using the libraries located in lib\dll-debug-x64 and lib\dll-release-x64 as an example.
+
+Concerning Google Test, the library will be downloaded and built automatically from its github repository. Someone with enough free time can do the same for libcurl and submit a pull request...
+
+Download and install the latest version of CMake : https://cmake.org/download/ (e.g. Windows win64-x64 Installer)
+
+Open CMake (cmake-gui)
+
+In "Where is the source code", put the ftpclient-cpp path (e.g. C:/Users/Amine/Documents/Work/PROJECTS/GitHub/ftpclient-cpp), where the main CMakeLists.txt file exist.
+
+In "Where to build binaries", paste the directory where you want to build the project (e.g. C:/Users/Amine/Documents/Work/PROJECTS/GitHub/ftpclient_build)
+
+Click on "Configure". After some time, an error message will be shown, that's normal as CMake is unable to find libcurl.
+
+Make sure "Advanced" checkbox is checked, in the list, locate the variables prefixed with "CURL_" and update them with the path of libcurl include directory and libraries, for example :
+
+CURL_INCLUDE_DIR C:\LIBS\build-libcurl-windows\third-party\libcurl\include
+CURL_LIBRARY_DEBUG C:\LIBS\build-libcurl-windows\third-party\libcurl\lib\dll-debug-x64\libcurl_debug.lib
+CURL_LIBRARY_RELEASE C:\LIBS\build-libcurl-windows\third-party\libcurl\lib\dll-release-x64\libcurl.lib
+
+Click on "Configure" again ! You should not have errors this time. You can ignore the warning related to the test configuration file.
+
+Then click on "Generate", you can choose a Visual Studio version if it is not done before (e.g. Visual Studio 15 2017 Win64, I think it should be the same version used to build libcurl...)
+
+Finally, click on "Open Project" to open the solution in Visual Studio.
+
+In Visual Studio, you can change the build type (Debug -> Release). Build the solution (press F7). It must succeed without any errors. You can close Visual Studio.
+
+The library will be found under C:\Users\Amine\Documents\Work\PROJECTS\GitHub\ftpclient_build\lib\Release]\ftpclient.lib
+
+After building a program using "ftpclient.lib", do not forget to copy libcurl DLL in the directory where the program binary is located.
+
+For example, in the build directory (e.g. C:\Users\Amine\Documents\Work\PROJECTS\GitHub\ftpclient_build), under "bin", directory, you may find "Debug", "Release" or both according to the build type used during the build in Visual Studio, and in it, the test program "test_ftpclient.exe". Before executing it, make sure to copy the libcurl DLL in the same directory (e.g. copy C:\LIBS\build-libcurl-windows\third-party\libcurl\lib\dll-release-x64\libcurl.dll and the PDB file too if you want, do not change the name of the DLL !) The type of the library MUST correspond to the type of the .lib file fed to CMake-gui !
+
+If you want to run the test program, in the command line, launch test_ftpclient.exe with the path of you test configuration file (INI) :
+
+```Shell
+C:\Users\Amine\Documents\Work\PROJECTS\GitHub\ftpclient_build\bin\[Debug | Release]\test_ftpclient.exe PATH_TO_YOUR_TEST_CONF_FILE\conf.ini
+```
+
 ## Run Unit Tests
 
 [simpleini](https://github.com/brofield/simpleini) is used to gather unit tests parameters from

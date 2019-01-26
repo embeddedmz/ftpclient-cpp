@@ -6,13 +6,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/lib)
 
-add_definitions(-DLINUX)
+if(NOT MSVC)
+	add_definitions(-DLINUX)
+else()
+	add_definitions(-DWINDOWS)
+endif()
 
 include_directories(FTP)
 
 add_subdirectory(FTP)
 add_subdirectory(TestFTP)
 
+include(CTest)
 enable_testing ()
 
 # test if the test INI file exist, otherwise default it to the one in TestFTP folder

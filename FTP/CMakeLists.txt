@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project(FTPClient)
 
-IF(NOT CMAKE_BUILD_TYPE MATCHES Coverage)
+IF(MSVC OR NOT CMAKE_BUILD_TYPE MATCHES Coverage)
 
 # Locate libcURL
 find_package(CURL REQUIRED)
