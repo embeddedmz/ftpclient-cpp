@@ -35,8 +35,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
+#include "CurlHandle.h"
 
 namespace embeddedmz {
+
    class CFTPClient
    {
    public:
@@ -139,7 +141,7 @@ namespace embeddedmz {
                           const FTP_PROTOCOL& eFtpProtocol = FTP_PROTOCOL::FTP,
                           const SettingsFlag& SettingsFlags = ALL_FLAGS);
    virtual const bool CleanupSession();
-   static int GetCurlSessionCount() { return s_iCurlSession; }
+   static int GetCurlSessionCount(){return 0;}
    const CURL* GetCurlPointer() const { return m_pCurlSession; }
 
    // FTP requests
@@ -228,9 +230,6 @@ protected:
    std::string          m_strSSLKeyFile;
    std::string          m_strSSLKeyPwd;
 
-   static std::mutex     s_mtxCurlSession; // mutex used to manage API global operations
-   volatile static int   s_iCurlSession;   // Count of the actual sessions
-
    mutable CURL*         m_pCurlSession;
    int                   m_iCurlTimeout;
 
@@ -247,6 +246,7 @@ private:
    static std::string s_strCurlTraceLogDirectory;
    mutable std::ofstream      m_ofFileCurlTrace;
    #endif
+   CurlHandle& m_curlHandle;
 };
 
 }

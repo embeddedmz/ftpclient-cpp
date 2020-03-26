@@ -9,8 +9,6 @@
 namespace embeddedmz {
 
    // Static members initialization
-   volatile int   CFTPClient::s_iCurlSession = 0;
-   std::mutex     CFTPClient::s_mtxCurlSession;
 
    #ifdef DEBUG_CURL
    std::string CFTPClient::s_strCurlTraceLogDirectory;
@@ -31,15 +29,9 @@ namespace embeddedmz {
       m_bNoSignal(false),
       m_bProgressCallbackSet(false),
       m_eSettingsFlags(ALL_FLAGS),
-      m_pCurlSession(nullptr)
+      m_pCurlSession(nullptr),
+      m_curlHandle(CurlHandle::instnace())
    {
-      s_mtxCurlSession.lock();
-      if (s_iCurlSession++ == 0)
-      {
-         /* In windows, this will init the winsock stuff */
-         curl_global_init(CURL_GLOBAL_ALL);
-      }
-      s_mtxCurlSession.unlock();
    }
 
 
@@ -56,13 +48,6 @@ namespace embeddedmz {
          
          CleanupSession();
       }
-      
-      s_mtxCurlSession.lock();
-      if (--s_iCurlSession <= 0)
-      {
-         curl_global_cleanup();
-      }
-      s_mtxCurlSession.unlock();
    }
 
    /**
