@@ -1,4 +1,5 @@
 .cproject
+.vscode/*
 .project
 .settings/*
 CMakeCache.txt

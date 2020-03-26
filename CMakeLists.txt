@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required (VERSION 3.12.0)
+
+# Read version from file VERSION
+FILE(READ "VERSION" project_VERSION)
+STRING(STRIP "${project_VERSION}" project_VERSION)
+
+PROJECT(FTPClient VERSION ${project_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
