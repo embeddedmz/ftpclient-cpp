@@ -37,7 +37,7 @@ extern std::string PROXY_SERVER_FAKE;
 
 extern std::mutex g_mtxConsoleMutex;
 
-namespace
+namespace embeddedmz
 {
 // fixture for FTP tests
 class FTPClientTest : public ::testing::Test
