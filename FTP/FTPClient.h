@@ -141,7 +141,6 @@ namespace embeddedmz {
                           const FTP_PROTOCOL& eFtpProtocol = FTP_PROTOCOL::FTP,
                           const SettingsFlag& SettingsFlags = ALL_FLAGS);
    virtual const bool CleanupSession();
-   static int GetCurlSessionCount(){return 0;}
    const CURL* GetCurlPointer() const { return m_pCurlSession; }
 
    // FTP requests

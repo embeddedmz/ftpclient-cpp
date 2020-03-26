@@ -164,7 +164,6 @@ TEST(FTPClient, TestCleanUpWithoutInit)
 TEST(FTPClient, TestMultithreading)
 {
    const char* arrDataArray[3] = { "Thread 1", "Thread 2", "Thread 3" };
-   unsigned uInitialCount = CFTPClient::GetCurlSessionCount();
 
    auto ThreadFunction = [](const char* pszThreadName)
    {
@@ -185,8 +184,6 @@ TEST(FTPClient, TestMultithreading)
    FirstThread.join();                 // pauses until first finishes
    SecondThread.join();                // pauses until second finishes
    ThirdThread.join();                 // pauses until third finishes
-
-   ASSERT_EQ(uInitialCount, CFTPClient::GetCurlSessionCount());
 }
 
 TEST_F(FTPClientTest, TestDownloadFile)
