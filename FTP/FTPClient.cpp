@@ -1034,9 +1034,6 @@ namespace embeddedmz {
 
    size_t CFTPClient::ThrowAwayCallback(void* ptr, size_t size, size_t nmemb, void* data)
    {
-      reinterpret_cast<void*>(ptr);
-      reinterpret_cast<void*>(data);
-
       /* we are not interested in the headers itself,
       so we only return the size we would have saved ... */ 
       return size * nmemb;
