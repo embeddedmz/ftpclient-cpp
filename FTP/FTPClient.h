@@ -43,8 +43,8 @@ namespace embeddedmz {
    {
    public:
       // Public definitions
-      typedef std::function<int(void*, double, double, double, double)> ProgressFnCallback;
-      typedef std::function<void(const std::string&)>                   LogFnCallback;
+      using ProgressFnCallback = std::function<int(void*, double, double, double, double)>;
+      using LogFnCallback = std::function<void(const std::string&)>;
 
       // Used to download many items at once
       struct WildcardTransfersCallbackData
@@ -182,7 +182,7 @@ namespace embeddedmz {
    static void SetCurlTraceLogDirectory(const std::string& strPath);
    #endif
 
-protected:
+private:
    /* common operations are performed here */
    inline const CURLcode Perform() const;
    inline std::string ParseURL(const std::string& strURL) const;
@@ -240,7 +240,6 @@ protected:
    // Log printer callback
    LogFnCallback         m_oLog;
 
-private:
    #ifdef DEBUG_CURL
    static std::string s_strCurlTraceLogDirectory;
    mutable std::ofstream      m_ofFileCurlTrace;
