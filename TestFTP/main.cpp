@@ -170,9 +170,8 @@ TEST(FTPClient, TestMultithreading)
       CFTPClient FTPClient([](const std::string& strMsg) { std::cout << strMsg << std::endl; });
       if (pszThreadName != nullptr)
       {
-         g_mtxConsoleMutex.lock();
+         std::unique_lock lock{g_mtxConsoleMutex}
          std::cout << pszThreadName << std::endl;
-         g_mtxConsoleMutex.unlock();
       }
    };
 
