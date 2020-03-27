@@ -5,6 +5,7 @@
 */
 
 #include "FTPClient.h"
+#include <stdexcept>
 
 namespace embeddedmz {
 
@@ -20,8 +21,8 @@ namespace embeddedmz {
    * @param Logger - a callabck to a logger function void(const std::string&)
    *
    */
-   CFTPClient::CFTPClient(LogFnCallback Logger) :
-      m_oLog(Logger),
+   CFTPClient::CFTPClient(LogFnCallback Logger ) :
+      m_oLog(std::move(Logger)),
       m_iCurlTimeout(0),
       m_uPort(0),
       m_eFtpProtocol(FTP_PROTOCOL::FTP),
@@ -32,6 +33,9 @@ namespace embeddedmz {
       m_pCurlSession(nullptr),
       m_curlHandle(CurlHandle::instnace())
    {
+      if(!m_oLog){
+         throw std::logic_error{"Invalid logger clb applied"};
+      }
    }
 
 
