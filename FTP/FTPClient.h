@@ -205,7 +205,7 @@ private:
    static size_t WriteItCallback(char* buff, size_t size, size_t nmemb, void* cb_data);
    
    // String Helpers
-   static std::string StringFormat(const std::string strFormat, ...);
+   static std::string StringFormat(std::string strFormat, ...);
    static void ReplaceString(std::string& strSubject, const std::string& strSearch,
                              const std::string& strReplace);
 

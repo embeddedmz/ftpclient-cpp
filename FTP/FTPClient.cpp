@@ -958,7 +958,7 @@ namespace embeddedmz {
    *
    * @retval string formatted string
    */
-   std::string CFTPClient::StringFormat(const std::string strFormat, ...)
+   std::string CFTPClient::StringFormat(std::string strFormat, ...)
    {
       int n = (static_cast<int>(strFormat.size())) * 2; // Reserve two times as much as the length of the strFormat
       
