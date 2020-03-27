@@ -1,4 +1,13 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required (VERSION 3.10.0)
+
+# Read version from file VERSION
+FILE(READ "VERSION" project_VERSION)
+STRING(STRIP "${project_VERSION}" project_VERSION)
+
+SET(LICENSE "MIT")
+cmake_policy(SET CMP0022 NEW)
+
+PROJECT(FTPClient VERSION ${project_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 

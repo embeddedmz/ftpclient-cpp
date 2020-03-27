@@ -1,7 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
-project(TestFTPClient)
-
 # Code coverage setup
 IF(CMAKE_BUILD_TYPE MATCHES Coverage)
    INCLUDE(CodeCoverage.cmake)

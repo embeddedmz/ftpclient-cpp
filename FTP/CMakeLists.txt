@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
-project(FTPClient)
 
 IF(MSVC OR NOT CMAKE_BUILD_TYPE MATCHES Coverage)
 
