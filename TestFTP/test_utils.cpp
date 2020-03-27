@@ -104,9 +104,9 @@ bool GlobalTestInit(const std::string& strConfFile)
          SFTP_REMOTE_DOWNLOAD_FOLDER += "*";
    }
    
-   if (FTP_TEST_ENABLED && (FTP_SERVER.empty() || FTP_SERVER_PORT == 0)
-       || SFTP_TEST_ENABLED && (SFTP_SERVER.empty() || SFTP_SERVER_PORT == 0)
-       || HTTP_PROXY_TEST_ENABLED && (PROXY_SERVER.empty() || PROXY_SERVER_FAKE.empty())
+   if ((FTP_TEST_ENABLED && (FTP_SERVER.empty() || FTP_SERVER_PORT == 0))
+       || (SFTP_TEST_ENABLED && (SFTP_SERVER.empty() || SFTP_SERVER_PORT == 0))
+       || (HTTP_PROXY_TEST_ENABLED && (PROXY_SERVER.empty() || PROXY_SERVER_FAKE.empty()))
        )
    {
        std::clog << "[ERROR] Check your INI file parameters."
