@@ -106,9 +106,13 @@ namespace embeddedmz {
       explicit CFTPClient(LogFnCallback oLogger);
       virtual ~CFTPClient();
 
-   // copy constructor and assignment operator are disabled
-   CFTPClient(const CFTPClient& Copy) = delete;
-   CFTPClient& operator=(const CFTPClient& Copy) = delete;
+      // copy constructor and assignment operator are disabled
+      CFTPClient(const CFTPClient& ) = delete;
+      CFTPClient& operator=(const CFTPClient& ) = delete;
+
+      // allow constructor and assignment operator are disabled
+      CFTPClient(CFTPClient&&) = delete;
+      CFTPClient& operator=(CFTPClient&&) = delete;
 
 
    // Setters - Getters (for unit tests)
