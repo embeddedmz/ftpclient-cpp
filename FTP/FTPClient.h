@@ -35,77 +35,84 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
+#include "CurlHandle.h"
 
-class CFTPClient
-{
-public:
-   // Public definitions
-   typedef std::function<int(void*, double, double, double, double)> ProgressFnCallback;
-   typedef std::function<void(const std::string&)>                   LogFnCallback;
+namespace embeddedmz {
 
-   // Used to download many items at once
-   struct WildcardTransfersCallbackData
+   class CFTPClient
    {
-      std::ofstream              ofsOutput;
-      std::string                strOutputPath;
-      std::vector<std::string>   vecDirList;
-      // will be used to call GetWildcard recursively to download subdirectories content...
-   };
+   public:
+      // Public definitions
+      using ProgressFnCallback = std::function<int(void*, double, double, double, double)>;
+      using LogFnCallback = std::function<void(const std::string&)>;
 
-   // Progress Function Data Object - parameter void* of ProgressFnCallback references it
-   struct ProgressFnStruct
-   {
-      ProgressFnStruct() : dLastRunTime(0), pCurl(nullptr), pOwner(nullptr) {}
-      double dLastRunTime;
-      CURL*  pCurl;
-      /* owner of the CFTPClient object. can be used in the body of the progress
-       * function to send signals to the owner (e.g. to update a GUI's progress bar)
-      */
-      void*  pOwner;
-   };
+      // Used to download many items at once
+      struct WildcardTransfersCallbackData
+      {
+         std::ofstream              ofsOutput;
+         std::string                strOutputPath;
+         std::vector<std::string>   vecDirList;
+         // will be used to call GetWildcard recursively to download subdirectories content...
+      };
 
-   // See Info method.
-   struct FileInfo
-   {
-      time_t tFileMTime;
-      double dFileSize;
-   };
+      // Progress Function Data Object - parameter void* of ProgressFnCallback references it
+      struct ProgressFnStruct
+      {
+         ProgressFnStruct() : dLastRunTime(0), pCurl(nullptr), pOwner(nullptr) {}
+         double dLastRunTime;
+         CURL*  pCurl;
+         /* owner of the CFTPClient object. can be used in the body of the progress
+         * function to send signals to the owner (e.g. to update a GUI's progress bar)
+         */
+         void*  pOwner;
+      };
 
-   enum SettingsFlag
-   {
-      NO_FLAGS    = 0x00,
-      ENABLE_LOG  = 0x01,
-      ENABLE_SSH  = 0x02, // only for SFTP
-      ALL_FLAGS   = 0xFF
-   };
+      // See Info method.
+      struct FileInfo
+      {
+         time_t tFileMTime;
+         double dFileSize;
+      };
 
-   enum class FTP_PROTOCOL : unsigned char
-   {
-      // These three protocols below should not be confused with the SFTP protocol. SFTP is an entirely different file transfer protocol that runs over SSH2.
-      FTP,     // Plain, unencrypted FTP that defaults over port 21. Most web browsers support basic FTP.
-            
-      FTPS,    /* Implicit SSL/TLS encrypted FTP that works just like HTTPS.
-                * Security is enabled with SSL as soon as the connection starts.
-                * The default FTPS port is 990. This protocol was the first version of encrypted FTP available,
-                * and while considered deprecated, is still widely used. None of the major web browsers support FTPS. */
-            
-      FTPES,   /* Explicit FTP over SSL/TLS. This starts out as plain FTP over port 21, but through special FTP commands is upgraded to TLS/SSL encryption.
-                * This upgrade usually occurs before the user credentials are sent over the connection.
-                * FTPES is a somewhat newer form of encrypted FTP (although still over a decade old),
-                * and is considered the preferred way to establish encrypted connections because it can be more firewall friendly.
-                * None of the major web browsers support FTPES. */
+      enum SettingsFlag
+      {
+         NO_FLAGS    = 0x00,
+         ENABLE_LOG  = 0x01,
+         ENABLE_SSH  = 0x02, // only for SFTP
+         ALL_FLAGS   = 0xFF
+      };
 
-      SFTP
-   };
+      enum class FTP_PROTOCOL : unsigned char
+      {
+         // These three protocols below should not be confused with the SFTP protocol. SFTP is an entirely different file transfer protocol that runs over SSH2.
+         FTP,     // Plain, unencrypted FTP that defaults over port 21. Most web browsers support basic FTP.
+               
+         FTPS,    /* Implicit SSL/TLS encrypted FTP that works just like HTTPS.
+                  * Security is enabled with SSL as soon as the connection starts.
+                  * The default FTPS port is 990. This protocol was the first version of encrypted FTP available,
+                  * and while considered deprecated, is still widely used. None of the major web browsers support FTPS. */
+               
+         FTPES,   /* Explicit FTP over SSL/TLS. This starts out as plain FTP over port 21, but through special FTP commands is upgraded to TLS/SSL encryption.
+                  * This upgrade usually occurs before the user credentials are sent over the connection.
+                  * FTPES is a somewhat newer form of encrypted FTP (although still over a decade old),
+                  * and is considered the preferred way to establish encrypted connections because it can be more firewall friendly.
+                  * None of the major web browsers support FTPES. */
 
-   /* Please provide your logger thread-safe routine, otherwise, you can turn off 
-    * error log messages printing by not using the flag ALL_FLAGS or ENABLE_LOG */
-   explicit CFTPClient(LogFnCallback oLogger);
-   virtual ~CFTPClient();
+         SFTP
+      };
 
-   // copy constructor and assignment operator are disabled
-   CFTPClient(const CFTPClient& Copy) = delete;
-   CFTPClient& operator=(const CFTPClient& Copy) = delete;
+      /* Please provide your logger thread-safe routine, otherwise, you can turn off 
+      * error log messages printing by not using the flag ALL_FLAGS or ENABLE_LOG */
+      explicit CFTPClient(LogFnCallback oLogger = [](const auto&) {});
+      virtual ~CFTPClient();
+
+      // copy constructor and assignment operator are disabled
+      CFTPClient(const CFTPClient& ) = delete;
+      CFTPClient& operator=(const CFTPClient& ) = delete;
+
+      // allow constructor and assignment operator are disabled
+      CFTPClient(CFTPClient&&) = delete;
+      CFTPClient& operator=(CFTPClient&&) = delete;
 
 
    // Setters - Getters (for unit tests)
@@ -138,7 +145,6 @@ public:
                           const FTP_PROTOCOL& eFtpProtocol = FTP_PROTOCOL::FTP,
                           const SettingsFlag& SettingsFlags = ALL_FLAGS);
    virtual const bool CleanupSession();
-   static int GetCurlSessionCount() { return s_iCurlSession; }
    const CURL* GetCurlPointer() const { return m_pCurlSession; }
 
    // FTP requests
@@ -180,7 +186,7 @@ public:
    static void SetCurlTraceLogDirectory(const std::string& strPath);
    #endif
 
-protected:
+private:
    /* common operations are performed here */
    inline const CURLcode Perform() const;
    inline std::string ParseURL(const std::string& strURL) const;
@@ -199,7 +205,7 @@ protected:
    static size_t WriteItCallback(char* buff, size_t size, size_t nmemb, void* cb_data);
    
    // String Helpers
-   static std::string StringFormat(const std::string strFormat, ...);
+   static std::string StringFormat(std::string strFormat, ...);
    static void ReplaceString(std::string& strSubject, const std::string& strSearch,
                              const std::string& strReplace);
 
@@ -227,9 +233,6 @@ protected:
    std::string          m_strSSLKeyFile;
    std::string          m_strSSLKeyPwd;
 
-   static std::mutex     s_mtxCurlSession; // mutex used to manage API global operations
-   volatile static int   s_iCurlSession;   // Count of the actual sessions
-
    mutable CURL*         m_pCurlSession;
    int                   m_iCurlTimeout;
 
@@ -241,12 +244,14 @@ protected:
    // Log printer callback
    LogFnCallback         m_oLog;
 
-private:
    #ifdef DEBUG_CURL
    static std::string s_strCurlTraceLogDirectory;
    mutable std::ofstream      m_ofFileCurlTrace;
    #endif
+   CurlHandle& m_curlHandle;
 };
+
+}
 
 // Log messages
 
