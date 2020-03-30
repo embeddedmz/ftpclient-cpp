@@ -4,17 +4,13 @@
 
 namespace embeddedmz {
 
-   CurlHandle::CurlHandle(){
-     curl_global_init(CURL_GLOBAL_ALL);
-   }
+CurlHandle::CurlHandle() { curl_global_init(CURL_GLOBAL_ALL); }
 
-   CurlHandle::~CurlHandle(){
-     curl_global_cleanup();
-   }   
+CurlHandle::~CurlHandle() { curl_global_cleanup(); }
 
-   CurlHandle& CurlHandle::instnace(){
-     static CurlHandle inst{};
-     return inst;
-   }
-
+CurlHandle &CurlHandle::instance() {
+  static CurlHandle inst{};
+  return inst;
 }
+
+} // namespace embeddedmz
