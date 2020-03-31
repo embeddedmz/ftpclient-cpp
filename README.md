@@ -7,6 +7,7 @@ This is a simple FTP client for C++. It wraps libcurl for FTP requests and meant
 and easy-to-use API to perform FTP related operations.
 
 Compilation has been tested with:
+- GCC 4.8.5 (Centos 7)
 - GCC 5.4.0 (GNU/Linux Ubuntu 16.04 LTS)
 - Microsoft Visual Studio 2015 (Windows 10)
 
@@ -25,7 +26,7 @@ Later, you can disable log printing by avoiding the flag CFTPClient::SettingsFla
 ```cpp
 #include "FTPClient.h"
 
-CFTPClient FTPClient([](const std::string&){ std::cout << strLogMsg << std::endl; });
+CFTPClient FTPClient([](const std::string& strLogMsg){ std::cout << strLogMsg << std::endl; });
 ```
 
 Before performing one or more requests, a session must be initialized with server parameters.
@@ -129,10 +130,7 @@ The unit tests "TestDownloadFile" and "TestUploadAndRemoveFile" demonstrate how 
 
 ## Thread Safety
 
-A mutex is used to increment/decrement atomically the count of CFTPClient objects.
-
-`curl_global_init` is called when the count of CFTPClient objects equals to zero (when instanciating the first object).
-`curl_global_cleanup` is called when the count of CFTPClient objects become zero (when all CFTPClient objects are destroyed).
+If you are using other libraries that make use of libcurl, please take a look at this issue (https://github.com/embeddedmz/ftpclient-cpp/issues/4). In short, remove from this project libcurl's global initialization/clean-up code, and manually call these functions, at your program startup/shutdown (or let your 3rd party library handle this).
 
 Do not share CFTPClient objects across threads as this would mean accessing libcurl handles from multiple threads
 at the same time which is not allowed.
