@@ -97,7 +97,7 @@ class CFTPClient {
 
    /* Please provide your logger thread-safe routine, otherwise, you can turn off
     * error log messages printing by not using the flag ALL_FLAGS or ENABLE_LOG */
-   explicit CFTPClient(LogFnCallback oLogger = [](const auto&) {});
+   explicit CFTPClient(LogFnCallback oLogger = [](const std::string&) {});
    virtual ~CFTPClient();
 
    // copy constructor and assignment operator are disabled
