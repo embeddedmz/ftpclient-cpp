@@ -37,7 +37,8 @@ extern std::string PROXY_SERVER_FAKE;
 
 extern std::mutex g_mtxConsoleMutex;
 
-namespace {
+namespace embeddedmz
+{
 // fixture for FTP tests
 class FTPClientTest : public ::testing::Test {
   protected:
@@ -147,16 +148,16 @@ TEST(FTPClient, TestCleanUpWithoutInit) {
    ASSERT_FALSE(FTPClient.CleanupSession());
 }
 
-TEST(FTPClient, TestMultithreading) {
-   const char* arrDataArray[3] = {"Thread 1", "Thread 2", "Thread 3"};
-   unsigned uInitialCount      = CFTPClient::GetCurlSessionCount();
+TEST(FTPClient, TestMultithreading)
+{
+   const char* arrDataArray[3] = { "Thread 1", "Thread 2", "Thread 3" };
 
    auto ThreadFunction = [](const char* pszThreadName) {
       CFTPClient FTPClient([](const std::string& strMsg) { std::cout << strMsg << std::endl; });
-      if (pszThreadName != nullptr) {
-         g_mtxConsoleMutex.lock();
+      if (pszThreadName != nullptr)
+      {
+         std::unique_lock<std::mutex> lock{g_mtxConsoleMutex};
          std::cout << pszThreadName << std::endl;
-         g_mtxConsoleMutex.unlock();
       }
    };
 
@@ -165,11 +166,9 @@ TEST(FTPClient, TestMultithreading) {
    std::thread ThirdThread(ThreadFunction, arrDataArray[2]);
 
    // synchronize threads
-   FirstThread.join();   // pauses until first finishes
-   SecondThread.join();  // pauses until second finishes
-   ThirdThread.join();   // pauses until third finishes
-
-   ASSERT_EQ(uInitialCount, CFTPClient::GetCurlSessionCount());
+   FirstThread.join();                 // pauses until first finishes
+   SecondThread.join();                // pauses until second finishes
+   ThirdThread.join();                 // pauses until third finishes
 }
 
 TEST_F(FTPClientTest, TestDownloadFile) {
