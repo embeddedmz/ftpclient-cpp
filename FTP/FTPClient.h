@@ -147,6 +147,8 @@ class CFTPClient {
 
    const bool DownloadFile(const std::string& strLocalFile, const std::string& strRemoteFile) const;
 
+   const bool DownloadFile(const std::string& strRemoteFile, std::vector<char>& data) const;
+
    const bool DownloadWildcard(const std::string& strLocalDir, const std::string& strRemoteWildcard) const;
 
    const bool UploadFile(const std::string& strLocalFile, const std::string& strRemoteFile, const bool& bCreateDir = false) const;
@@ -175,6 +177,7 @@ class CFTPClient {
    static size_t WriteToFileCallback(void* ptr, size_t size, size_t nmemb, void* data);
    static size_t ReadFromFileCallback(void* ptr, size_t size, size_t nmemb, void* stream);
    static size_t ThrowAwayCallback(void* ptr, size_t size, size_t nmemb, void* data);
+   static size_t WriteToMemory(void* ptr, size_t size, size_t nmemb, void* data);
 
    // Wildcard transfers callbacks
    static long FileIsComingCallback(struct curl_fileinfo* finfo, WildcardTransfersCallbackData* data, int remains);

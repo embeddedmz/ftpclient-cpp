@@ -186,6 +186,26 @@ TEST_F(FTPClientTest, TestDownloadFile) {
       std::cout << "FTP tests are disabled !" << std::endl;
 }
 
+TEST_F(FTPClientTest, TestDownloadFileToMem) {
+       if (FTP_TEST_ENABLED) {
+          //stores file content
+          std::vector<char> output;
+          // to display a beautiful progress bar on console
+          m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
+
+          EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
+
+          /* to properly show the progress bar */
+          std::cout << std::endl;
+
+          /* TODO : we can check the SHA1 of the downloaded file with a value provided in the INI file */
+
+          /* delete test file */
+          EXPECT_TRUE(remove("downloaded_file") == 0);
+       } else
+          std::cout << "FTP tests are disabled !" << std::endl;
+}
+
 TEST_F(FTPClientTest, TestDownloadFile10Times) {
    if (FTP_TEST_ENABLED) {
       // to display a beautiful progress bar on console

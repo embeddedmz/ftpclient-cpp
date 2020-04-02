@@ -600,6 +600,39 @@ const bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::
 
    return bRet;
 }
+/**
+ * @brief downloads a remote file to memory
+ *
+ * @param [in] strRemoteFile URI of remote file
+ * @param [out] data vector of bytes
+ *
+ * @retval true   Successfully downloaded the file.
+ * @retval false  The file couldn't be downloaded. Check the log messages for
+ * more information.
+ */
+const bool CFTPClient::DownloadFile(const std::string &strRemoteFile, std::vector<char> &data) const {
+    if (strRemoteFile.empty()) return false;
+    if (!m_pCurlSession) {
+        if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
+        return false;
+    }
+    curl_easy_reset(m_pCurlSession);
+    std::string strFile = ParseURL(strRemoteFile);
+
+    curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strFile.c_str());
+    curl_easy_setopt(m_pCurlSession, CURLOPT_WRITEFUNCTION, WriteToMemory);
+    curl_easy_setopt(m_pCurlSession, CURLOPT_WRITEDATA, &data);
+
+    CURLcode res = Perform();
+
+    if (res != CURLE_OK) {
+        if (m_eSettingsFlags & ENABLE_LOG)
+            m_oLog(StringFormat(LOG_ERROR_CURL_GETFILE_FORMAT, m_strServer.c_str(), strRemoteFile.c_str(), res,
+                                curl_easy_strerror(res)));
+       return false;
+    } else
+        return true;
+    }
 
 /**
  * @brief downloads all elements according that match the wildcarded URL
@@ -977,7 +1010,25 @@ size_t CFTPClient::WriteToFileCallback(void *buff, size_t size, size_t nmemb, vo
 
    return size * nmemb;
 }
+/**
+ * @brief stores the server response in std::vector<char>
+ *
+ * @param buff pointer of max size (size*nmemb) to read data from it
+ * @param size size parameter
+ * @param nmemb memblock parameter
+ * @param userdata pointer to user data (file stream)
+ *
+ * @return (size * nmemb)
+ */
+size_t CFTPClient::WriteToMemory(void *buff, size_t size, size_t nmemb, void *data) {
+   if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1) || (data == nullptr)) return 0;
 
+   std::vector<int>* vec = reinterpret_cast<std::vector<int>*>(data);
+   size_t ssize = size * nmemb;
+   std::copy((char*)buff,(char*)buff+ssize,vec->begin());
+
+   return ssize;
+}
 /**
  * @brief reads the content of an already opened file stream
  * used by UploadFile()
