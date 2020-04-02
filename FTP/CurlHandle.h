@@ -4,21 +4,21 @@
 namespace embeddedmz {
 
 class CurlHandle {
-  public:
-   static CurlHandle &instance();
+public:
+  static CurlHandle &instance();
 
-   CurlHandle(CurlHandle const &) = delete;
-   CurlHandle(CurlHandle &&)      = delete;
+  CurlHandle(CurlHandle const &) = delete;
+  CurlHandle(CurlHandle &&) = delete;
 
-   CurlHandle &operator=(CurlHandle const &) = delete;
-   CurlHandle &operator=(CurlHandle &&) = delete;
+  CurlHandle &operator=(CurlHandle const &) = delete;
+  CurlHandle &operator=(CurlHandle &&) = delete;
 
-   ~CurlHandle();
+  ~CurlHandle();
 
-  private:
-   CurlHandle();
+private:
+  CurlHandle();
 };
 
-}  // namespace embeddedmz
+} // namespace embeddedmz
 
 #endif
