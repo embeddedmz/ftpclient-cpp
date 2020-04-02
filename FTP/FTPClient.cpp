@@ -5,6 +5,7 @@
  */
 
 #include "FTPClient.h"
+#include <iterator>
 #include <stdexcept>
 
 namespace embeddedmz {
@@ -658,6 +659,8 @@ const bool CFTPClient::DownloadFile(const std::string &strRemoteFile,
   curl_easy_reset(m_pCurlSession);
   std::string strFile = ParseURL(strRemoteFile);
 
+  data.clear();
+
   curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strFile.c_str());
   curl_easy_setopt(m_pCurlSession, CURLOPT_WRITEFUNCTION, WriteToMemory);
   curl_easy_setopt(m_pCurlSession, CURLOPT_WRITEDATA, &data);
@@ -1111,8 +1114,7 @@ size_t CFTPClient::WriteToMemory(void *buff, size_t size, size_t nmemb,
 
   auto *vec = reinterpret_cast<std::vector<char>*>(data);
   size_t ssize = size * nmemb;
-  vec->resize(ssize);
-  std::copy((char *)buff, (char *)buff + ssize, vec->begin());
+  std::copy((char *)buff, (char *)buff + ssize, std::back_inserter(*vec));
 
   return ssize;
 }
