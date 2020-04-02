@@ -199,9 +199,6 @@ TEST_F(FTPClientTest, TestDownloadFileToMem) {
           std::cout << std::endl;
 
           /* TODO : we can check the SHA1 of the downloaded file with a value provided in the INI file */
-
-          /* delete test file */
-          EXPECT_TRUE(remove("downloaded_file") == 0);
        } else
           std::cout << "FTP tests are disabled !" << std::endl;
 }

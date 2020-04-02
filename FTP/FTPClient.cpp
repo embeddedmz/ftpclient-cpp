@@ -1111,6 +1111,7 @@ size_t CFTPClient::WriteToMemory(void *buff, size_t size, size_t nmemb,
 
   auto *vec = reinterpret_cast<std::vector<char>*>(data);
   size_t ssize = size * nmemb;
+  vec->resize(ssize);
   std::copy((char *)buff, (char *)buff + ssize, vec->begin());
 
   return ssize;
