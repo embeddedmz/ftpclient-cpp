@@ -1,7 +1,7 @@
 
 IF(MSVC OR NOT CMAKE_BUILD_TYPE MATCHES Coverage)
 
-# Locate libcURL
+#Locate libcURL
 find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
