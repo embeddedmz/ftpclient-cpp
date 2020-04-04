@@ -21,6 +21,7 @@ extern unsigned FTP_SERVER_PORT;
 extern std::string FTP_USERNAME;
 extern std::string FTP_PASSWORD;
 extern std::string FTP_REMOTE_FILE;
+extern std::string FTP_REMOTE_FILE_SHA1SUM;
 extern std::string FTP_REMOTE_UPLOAD_FOLDER;
 extern std::string FTP_REMOTE_DOWNLOAD_FOLDER;
 
@@ -29,6 +30,7 @@ extern unsigned SFTP_SERVER_PORT;
 extern std::string SFTP_USERNAME;
 extern std::string SFTP_PASSWORD;
 extern std::string SFTP_REMOTE_FILE;
+extern std::string SFTP_REMOTE_FILE_SHA1SUM;
 extern std::string SFTP_REMOTE_UPLOAD_FOLDER;
 extern std::string SFTP_REMOTE_DOWNLOAD_FOLDER;
 
@@ -178,7 +180,12 @@ TEST_F(FTPClientTest, TestDownloadFile) {
       /* to properly show the progress bar */
       std::cout << std::endl;
 
-      /* TODO : we can check the SHA1 of the downloaded file with a value provided in the INI file */
+      /* check the SHA1 sum of the downloaded file if possible */
+      if (!FTP_REMOTE_FILE_SHA1SUM.empty()) {
+         std::string ret = sha1sum("downloaded_file");
+         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+         EXPECT_TRUE(FTP_REMOTE_FILE_SHA1SUM == ret);
+      }
 
       /* delete test file */
       EXPECT_TRUE(remove("downloaded_file") == 0);
@@ -187,20 +194,25 @@ TEST_F(FTPClientTest, TestDownloadFile) {
 }
 
 TEST_F(FTPClientTest, TestDownloadFileToMem) {
-       if (FTP_TEST_ENABLED) {
-          //stores file content
-          std::vector<char> output;
-          // to display a beautiful progress bar on console
-          m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
+   if (FTP_TEST_ENABLED) {
+      // stores file content
+      std::vector<char> output;
+      // to display a beautiful progress bar on console
+      m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-          EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
+      EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
 
-          /* to properly show the progress bar */
-          std::cout << std::endl;
+      /* to properly show the progress bar */
+      std::cout << std::endl;
 
-          /* TODO : we can check the SHA1 of the downloaded file with a value provided in the INI file */
-       } else
-          std::cout << "FTP tests are disabled !" << std::endl;
+      /* check the SHA1 sum of the downloaded file if possible */
+      if (!FTP_REMOTE_FILE_SHA1SUM.empty()) {
+         std::string ret = sha1sum(output);
+         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+         EXPECT_TRUE(FTP_REMOTE_FILE_SHA1SUM == ret);
+      }
+   } else
+      std::cout << "FTP tests are disabled !" << std::endl;
 }
 
 TEST_F(FTPClientTest, TestDownloadFile10Times) {
@@ -208,15 +220,19 @@ TEST_F(FTPClientTest, TestDownloadFile10Times) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      for (unsigned i = 0; i < 10; ++i)
-      {
+      for (unsigned i = 0; i < 10; ++i) {
          EXPECT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
 
          /* to properly show the progress bar */
          std::cout << std::endl;
-      }
 
-      /* TODO : we can check the SHA1 of the downloaded file with a value provided in the INI file */
+         /* check the SHA1 sum of the downloaded file if possible */
+         if (!FTP_REMOTE_FILE_SHA1SUM.empty()) {
+            std::string ret = sha1sum("downloaded_file");
+            std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+            EXPECT_TRUE(FTP_REMOTE_FILE_SHA1SUM == ret);
+         }
+      }
 
       /* delete test file */
       EXPECT_TRUE(remove("downloaded_file") == 0);

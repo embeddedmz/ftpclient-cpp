@@ -28,6 +28,7 @@
 #endif
 #endif
 
+#include "SHA1.h"
 #include "SimpleIni.h"
 
 bool GlobalTestInit(const std::string& strConfFile);
@@ -40,5 +41,10 @@ int TestUPProgressCallback(void* ptr, double dTotalToDownload, double dNowDownlo
 
 long GetGMTOffset();
 bool GetFileTime(const char* const& pszFilePath, time_t& tLastModificationTime);
+long long GetFileSize(const std::string& filename);
+long long FdGetFileSize(int fd);
+
+std::string sha1sum(const std::vector<char>& memData);
+std::string sha1sum(const std::string& filename);
 
 #endif

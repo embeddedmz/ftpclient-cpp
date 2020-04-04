@@ -48,7 +48,9 @@ if(NOT MSVC)
 endif()
 
 include_directories(../FTP)
+include_directories(./sha1)
 include_directories(./simpleini)
+
 include_directories(./)
 
 IF(NOT MSVC AND CMAKE_BUILD_TYPE MATCHES Coverage)
@@ -56,7 +58,7 @@ IF(NOT MSVC AND CMAKE_BUILD_TYPE MATCHES Coverage)
 file(GLOB_RECURSE ftp_source_files ../FTP/*)
 
 #Output Setup
-add_executable(test_ftpclient main.cpp test_utils.cpp ${ftp_source_files})
+add_executable(test_ftpclient main.cpp test_utils.cpp ${ftp_source_files} sha1/SHA1.cpp)
 
 #Link setup
 target_link_libraries(test_ftpclient ${GTEST_LIBRARIES} pthread curl)
@@ -76,7 +78,7 @@ ELSE()
 #link_directories(${CMAKE_BINARY_DIR}/lib)
 
 #Output Setup
-add_executable(test_ftpclient main.cpp test_utils.cpp)
+add_executable(test_ftpclient main.cpp test_utils.cpp sha1/SHA1.cpp)
 
 #Link setup
 if(NOT MSVC)

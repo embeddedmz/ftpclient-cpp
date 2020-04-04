@@ -16,6 +16,7 @@ unsigned FTP_SERVER_PORT;
 std::string FTP_USERNAME;
 std::string FTP_PASSWORD;
 std::string FTP_REMOTE_FILE;
+std::string FTP_REMOTE_FILE_SHA1SUM;
 std::string FTP_REMOTE_UPLOAD_FOLDER;
 std::string FTP_REMOTE_DOWNLOAD_FOLDER;
 
@@ -24,6 +25,7 @@ unsigned SFTP_SERVER_PORT;
 std::string SFTP_USERNAME;
 std::string SFTP_PASSWORD;
 std::string SFTP_REMOTE_FILE;
+std::string SFTP_REMOTE_FILE_SHA1SUM;
 std::string SFTP_REMOTE_UPLOAD_FOLDER;
 std::string SFTP_REMOTE_DOWNLOAD_FOLDER;
 
@@ -64,6 +66,7 @@ bool GlobalTestInit(const std::string& strConfFile) {
    FTP_USERNAME               = ini.GetValue("ftp", "username", "");
    FTP_PASSWORD               = ini.GetValue("ftp", "password", "");
    FTP_REMOTE_FILE            = ini.GetValue("ftp", "remote_file", "");
+   FTP_REMOTE_FILE_SHA1SUM    = ini.GetValue("ftp", "remote_file_sha1sum", "");
    FTP_REMOTE_UPLOAD_FOLDER   = ini.GetValue("ftp", "remote_upload_folder", "");
    FTP_REMOTE_DOWNLOAD_FOLDER = ini.GetValue("ftp", "remote_download_folder", "");
 
@@ -72,6 +75,7 @@ bool GlobalTestInit(const std::string& strConfFile) {
    SFTP_USERNAME               = ini.GetValue("sftp", "username", "");
    SFTP_PASSWORD               = ini.GetValue("sftp", "password", "");
    SFTP_REMOTE_FILE            = ini.GetValue("sftp", "remote_file", "");
+   SFTP_REMOTE_FILE_SHA1SUM    = ini.GetValue("sftp", "remote_file_sha1sum", "");
    SFTP_REMOTE_UPLOAD_FOLDER   = ini.GetValue("sftp", "remote_upload_folder", "");
    SFTP_REMOTE_DOWNLOAD_FOLDER = ini.GetValue("sftp", "remote_download_folder", "");
 
@@ -183,4 +187,72 @@ bool GetFileTime(const char* const& pszFilePath, time_t& tLastModificationTime) 
    }
 
    return false;
+}
+
+long long GetFileSize(const std::string& filename) {
+   struct stat stat_buf;
+   int rc = stat(filename.c_str(), &stat_buf);
+   return rc == 0 ? stat_buf.st_size : -1;
+}
+
+long long FdGetFileSize(int fd) {
+   struct stat stat_buf;
+   int rc = fstat(fd, &stat_buf);
+   return rc == 0 ? stat_buf.st_size : -1;
+}
+
+std::string sha1sum(const std::vector<char>& memData) {
+   CSHA1 sha1;
+   sha1.Update(reinterpret_cast<const unsigned char*>(memData.data()), memData.size());
+   sha1.Final();
+
+   std::string strHash;
+   sha1.ReportHashStl(strHash, CSHA1::REPORT_HEX_SHORT);
+
+   return strHash;
+}
+
+std::string sha1sum(const std::string& filename) {
+   long long fileSize = GetFileSize(filename);
+   if (fileSize <= 0) {
+      return std::string();
+   }
+
+   std::ifstream file(filename);
+   if (!file) {
+      return std::string();
+   }
+
+   CSHA1 sha1;
+
+   char* pFileBuffer;
+   static const size_t s_bufferSize = 32 * 20 * 820;
+   try {
+      pFileBuffer = new char[s_bufferSize];
+   } catch (...) {
+      return std::string();
+   }
+
+   // size_t bytesProcessed = 0;
+   while (true) {
+      file.read(pFileBuffer, s_bufferSize);
+      const size_t readBytes = file.gcount();
+
+      if (readBytes > 0) {
+         sha1.Update(reinterpret_cast<const unsigned char*>(pFileBuffer), readBytes);
+      }
+
+      // bytesProcessed += readBytes;
+
+      if (readBytes < s_bufferSize) break;
+   }
+   delete[] pFileBuffer;
+
+   // Finalize hash
+   sha1.Final();
+
+   std::string strHash;
+   sha1.ReportHashStl(strHash, CSHA1::REPORT_HEX_SHORT);
+
+   return strHash;
 }
