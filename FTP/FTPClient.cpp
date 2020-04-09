@@ -896,40 +896,16 @@ const CURLcode CFTPClient::Perform() const {
  * @retval string formatted string
  */
 std::string CFTPClient::StringFormat(std::string strFormat, ...) {
-   int n = (static_cast<int>(strFormat.size())) * 2;  // Reserve two times as much as the length of the strFormat
-
-   std::unique_ptr<char[]> pFormatted;
-
-   va_list ap;
-
-   while (true) {
-      pFormatted.reset(new char[n]);  // Wrap the plain char array into the unique_ptr
-      strcpy(&pFormatted[0], strFormat.c_str());
-
-      va_start(ap, strFormat);
-      int iFinaln = vsnprintf(&pFormatted[0], n, strFormat.c_str(), ap);
-      va_end(ap);
-
-      if (iFinaln < 0 || iFinaln >= n) {
-         n += abs(iFinaln - n + 1);
-      } else {
-         break;
-      }
-   }
-
-   return std::string(pFormatted.get());
-}
-/*
-std::string CFTPClient::StringFormat(const std::string strFormat, ...)
-{
-   char buffer[1024];
    va_list args;
-   va_start(args, strFormat);
-   vsnprintf(buffer, 1024, strFormat.c_str(), args);
+   va_start (args, strFormat);
+   size_t len = std::vsnprintf(NULL, 0, strFormat.c_str(), args);
    va_end (args);
-   return std::string(buffer);
+   std::vector<char> vec(len + 1);
+   va_start (args, strFormat);
+   std::vsnprintf(&vec[0], len + 1, strFormat.c_str(), args);
+   va_end (args);
+   return &vec[0];
 }
-*/
 
 void CFTPClient::ReplaceString(std::string &strSubject, const std::string &strSearch, const std::string &strReplace) {
    if (strSearch.empty()) return;
