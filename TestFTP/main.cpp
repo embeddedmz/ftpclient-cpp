@@ -303,18 +303,81 @@ TEST_F(FTPClientTest, TestUploadAndRemoveFile) {
       // Upload file
       ASSERT_TRUE(m_pFTPClient->UploadFile("test_upload.txt", FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
 
-      /* to properly show the progress bar */
       std::cout << std::endl;
+
+      // Download the uploaded file into a vector of bytes
+      {
+         std::vector<char> uploadedFileBytes;
+         EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt", uploadedFileBytes));
+
+         std::cout << std::endl;
+
+         /* check the SHA1 sum of the uploaded file */
+         std::string expectedSha1Sum = sha1sum("test_upload.txt");
+         std::string resultSha1Sum = sha1sum(uploadedFileBytes);
+
+         EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+      }
 
       // Remove file
       ASSERT_TRUE(m_pFTPClient->RemoveFile(FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
 
       // delete test file
       EXPECT_TRUE(remove("test_upload.txt") == 0);
+   } else
+      std::cout << "FTP tests are disabled !" << std::endl;
+}
 
-      /* TODO : we can download the uploaded file and check if its content is equal to the original one
-         we can use the helper function AreFilesEqual()
-      */
+TEST_F(FTPClientTest, TestUploadAndRemoveFile10Times) {
+   if (FTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestUPProgressCallback);
+
+      std::ostringstream ssTimestamp;
+      TimeStampTest(ssTimestamp);
+
+      // create dummy test file
+      std::ofstream ofTestUpload("test_upload.txt");
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      ofTestUpload << "Unit Test TestUploadFile executed on " + ssTimestamp.str() + "\n" +
+                          "This file is uploaded via FTPClient-C++ API.\n" +
+                          "If this file exists, that means that the unit test is passed.\n";
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+      ofTestUpload.close();
+
+      for (unsigned i = 0; i < 10; ++i) {
+          // Upload file and create a directory "upload_test"
+          ASSERT_TRUE(m_pFTPClient->UploadFile("test_upload.txt", FTP_REMOTE_UPLOAD_FOLDER + "upload_test/test_upload.txt", true));
+
+          /* to properly show the progress bar */
+          std::cout << std::endl;
+
+          // Upload file
+          ASSERT_TRUE(m_pFTPClient->UploadFile("test_upload.txt", FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+
+          std::cout << std::endl;
+
+          // Download the uploaded file into a vector of bytes
+          {
+             std::vector<char> uploadedFileBytes;
+             EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt", uploadedFileBytes));
+
+             std::cout << std::endl;
+
+             /* check the SHA1 sum of the uploaded file */
+             std::string expectedSha1Sum = sha1sum("test_upload.txt");
+             std::string resultSha1Sum = sha1sum(uploadedFileBytes);
+
+             EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+          }
+
+          // Remove file
+          ASSERT_TRUE(m_pFTPClient->RemoveFile(FTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+      }
+
+      // delete test file
+      EXPECT_TRUE(remove("test_upload.txt") == 0);
    } else
       std::cout << "FTP tests are disabled !" << std::endl;
 }
