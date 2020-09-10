@@ -714,6 +714,7 @@ const bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const st
          // recursively download directories
          bRet = true;
          for (const auto &Dir : data.vecDirList) {
+            if ((Dir == ".") || (Dir == "..")) continue;
             if (!DownloadWildcard(data.strOutputPath + Dir, strBaseUrl + Dir + "/*")) {
                m_oLog(
                    StringFormat(LOG_ERROR_CURL_GETWILD_REC_FORMAT, (strBaseUrl + Dir + "/*").c_str(), (data.strOutputPath + Dir).c_str()));
