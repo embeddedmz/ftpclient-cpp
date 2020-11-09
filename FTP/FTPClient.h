@@ -20,7 +20,7 @@
 #include <cstring>  // strerror, strlen, memcpy, strcpy
 #include <ctime>
 #ifndef LINUX
-#include <direct.h>  // mkdir
+#include <unistd.h>  // mkdir
 #endif
 #include <stdarg.h>  // va_start, etc.
 #include <stdio.h>
