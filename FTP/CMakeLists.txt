@@ -6,6 +6,6 @@ find_package(CURL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
 file(GLOB_RECURSE source_files ./*)
-add_library(ftpclient STATIC ${source_files})
+add_library(ftpclient ${source_files})
 
 ENDIF()
