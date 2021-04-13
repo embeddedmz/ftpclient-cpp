@@ -180,7 +180,7 @@ void CFTPClient::SetProxy(const std::string &strProxy) {
  * @endcode
  */
 std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
-   std::string strURL = m_strServer + "/" + strRemoteFile;
+   std::string strURL = m_strServer+":"+ std::to_string(m_uPort) + "/" + strRemoteFile;
 
    ReplaceString(strURL, "/", "//");
 
