@@ -1,6 +1,15 @@
 #ifndef INCLUDE_TEST_UTILS_H_
 #define INCLUDE_TEST_UTILS_H_
 
+#ifdef WINDOWS
+#include <windows.h>
+#ifdef _DEBUG
+#ifdef _USE_VLD_
+#include <vld.h>
+#endif
+#endif
+#endif
+
 #include <sys/stat.h>
 #include <algorithm>
 #include <cerrno>
@@ -19,14 +28,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#ifdef WINDOWS
-#ifdef _DEBUG
-#ifdef _USE_VLD_
-#include <vld.h>
-#endif
-#endif
-#endif
 
 #include "SHA1.h"
 #include "SimpleIni.h"
