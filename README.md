@@ -31,10 +31,10 @@ Later, you can disable log printing by avoiding the flag CFTPClient::SettingsFla
 CFTPClient FTPClient([](const std::string& strLogMsg){ std::cout << strLogMsg << std::endl; });
 ```
 
-Before performing one or more requests, a session must be initialized with server parameters.
+Before performing one or more requests, a session must be initialized with server parameters (don't prefix the address with ftp://)
 
 ```cpp
-FTPClient.InitSession("ftp://127.0.0.1", 21, "username", "password");
+FTPClient.InitSession("127.0.0.1", 21, "username", "password");
 ```
 
 You can also set parameters such as the time out (in seconds), the HTTP proxy server etc... before sending
