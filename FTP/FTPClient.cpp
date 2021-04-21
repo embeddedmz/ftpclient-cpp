@@ -5,6 +5,7 @@
  */
 
 #include "FTPClient.h"
+
 #include <iterator>
 #include <stdexcept>
 
@@ -180,7 +181,7 @@ void CFTPClient::SetProxy(const std::string &strProxy) {
  * @endcode
  */
 std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
-   std::string strURL = m_strServer+":"+ std::to_string(m_uPort) + "/" + strRemoteFile;
+   std::string strURL = m_strServer + ":" + std::to_string(m_uPort) + "/" + strRemoteFile;
 
    ReplaceString(strURL, "/", "//");
 
@@ -826,7 +827,7 @@ const CURLcode CFTPClient::Perform() const {
 
    curl_easy_setopt(m_pCurlSession, CURLOPT_USERPWD, (m_strUserName + ":" + m_strPassword).c_str());
 
-   if (m_bActive) curl_easy_setopt(m_pCurlSession, CURLOPT_FTPPORT, m_uPort);
+   if (m_bActive) curl_easy_setopt(m_pCurlSession, CURLOPT_FTPPORT, "-");
 
    if (m_iCurlTimeout > 0) {
       curl_easy_setopt(m_pCurlSession, CURLOPT_TIMEOUT, m_iCurlTimeout);
@@ -897,13 +898,13 @@ const CURLcode CFTPClient::Perform() const {
  */
 std::string CFTPClient::StringFormat(std::string strFormat, ...) {
    va_list args;
-   va_start (args, strFormat);
+   va_start(args, strFormat);
    size_t len = std::vsnprintf(NULL, 0, strFormat.c_str(), args);
-   va_end (args);
+   va_end(args);
    std::vector<char> vec(len + 1);
-   va_start (args, strFormat);
+   va_start(args, strFormat);
    std::vsnprintf(&vec[0], len + 1, strFormat.c_str(), args);
-   va_end (args);
+   va_end(args);
    return &vec[0];
 }
 
