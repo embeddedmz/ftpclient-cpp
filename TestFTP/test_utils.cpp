@@ -218,7 +218,7 @@ std::string sha1sum(const std::string& filename) {
       return std::string();
    }
 
-   std::ifstream file(filename);
+   std::ifstream file(filename, std::ios::binary);
    if (!file) {
       return std::string();
    }
@@ -240,11 +240,11 @@ std::string sha1sum(const std::string& filename) {
 
       if (readBytes > 0) {
          sha1.Update(reinterpret_cast<const unsigned char*>(pFileBuffer), readBytes);
+      } else {
+         break;
       }
 
       // bytesProcessed += readBytes;
-
-      if (readBytes < s_bufferSize) break;
    }
    delete[] pFileBuffer;
 
