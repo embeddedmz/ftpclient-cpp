@@ -55,13 +55,48 @@ class FTPClientTest : public ::testing::Test {
 
    virtual void SetUp() {
       m_pFTPClient.reset(new CFTPClient(PRINT_LOG));
-      m_pFTPClient->InitSession(FTP_SERVER, FTP_SERVER_PORT, FTP_USERNAME, FTP_PASSWORD);
+      m_pFTPClient->InitSession(FTP_SERVER, FTP_SERVER_PORT, FTP_USERNAME, FTP_PASSWORD,
+          CFTPClient::FTP_PROTOCOL::FTP, CFTPClient::SettingsFlag::ENABLE_LOG);
+
+      // needed to avoid some rare test failure - though, it seems that libcurl timeout are not working properly...
+      //m_pFTPClient->SetTimeout(500);
    }
 
    virtual void TearDown() {
       if (m_pFTPClient.get() != nullptr) {
          m_pFTPClient->CleanupSession();
          m_pFTPClient.reset();
+      }
+   }
+};
+
+// fixture for SFTP tests
+class SFTPClientTest : public ::testing::Test {
+  protected:
+   std::unique_ptr<CFTPClient> m_pSFTPClient;
+
+   SFTPClientTest() : m_pSFTPClient(nullptr) {
+#ifdef DEBUG_CURL
+      CFTPClient::SetCurlTraceLogDirectory(CURL_LOG_FOLDER);
+#endif
+   }
+
+   virtual ~SFTPClientTest() {}
+
+   virtual void SetUp() {
+      m_pSFTPClient.reset(new CFTPClient(PRINT_LOG));
+      m_pSFTPClient->InitSession(SFTP_SERVER, SFTP_SERVER_PORT, SFTP_USERNAME, SFTP_PASSWORD, CFTPClient::FTP_PROTOCOL::SFTP,
+                                 CFTPClient::SettingsFlag::ENABLE_LOG);
+      m_pSFTPClient->SetInsecure(true);
+
+      // needed to avoid some rare test failure - timeout seems to not working
+      //m_pSFTPClient->SetTimeout(500);
+   }
+
+   virtual void TearDown() {
+      if (m_pSFTPClient.get() != nullptr) {
+         m_pSFTPClient->CleanupSession();
+         m_pSFTPClient.reset();
       }
    }
 };
@@ -81,19 +116,19 @@ TEST(FTPClient, TestSession) {
    EXPECT_TRUE(FTPClient.GetSSLKeyPwd().empty());
 
    EXPECT_FALSE(FTPClient.GetActive());
-   EXPECT_FALSE(FTPClient.GetNoSignal());
+   EXPECT_TRUE(FTPClient.GetNoSignal());
 
    EXPECT_EQ(0, FTPClient.GetTimeout());
 
    EXPECT_TRUE(FTPClient.GetCurlPointer() == nullptr);
 
-   EXPECT_EQ(CFTPClient::SettingsFlag::ALL_FLAGS, FTPClient.GetSettingsFlags());
+   EXPECT_EQ(CFTPClient::SettingsFlag::NO_FLAGS, FTPClient.GetSettingsFlags());
    EXPECT_EQ(CFTPClient::FTP_PROTOCOL::FTP, FTPClient.GetProtocol());
 
    ASSERT_TRUE(FTPClient.InitSession(FTP_SERVER, FTP_SERVER_PORT, FTP_USERNAME, FTP_PASSWORD, CFTPClient::FTP_PROTOCOL::SFTP,
-                                     CFTPClient::ENABLE_LOG));
+                                     CFTPClient::ENABLE_LOG | CFTPClient::ENABLE_SSH_AGENT));
 
-   EXPECT_EQ(CFTPClient::ENABLE_LOG, FTPClient.GetSettingsFlags());
+   EXPECT_EQ(CFTPClient::ENABLE_LOG | CFTPClient::ENABLE_SSH_AGENT, FTPClient.GetSettingsFlags());
    EXPECT_EQ(CFTPClient::FTP_PROTOCOL::SFTP, FTPClient.GetProtocol());
 
    EXPECT_TRUE(FTPClient.GetCurlPointer() != nullptr);
@@ -103,10 +138,10 @@ TEST(FTPClient, TestSession) {
    FTPClient.SetSSLKeyPassword("passphrase");
    FTPClient.SetTimeout(10);
    FTPClient.SetActive(true);
-   FTPClient.SetNoSignal(true);
+   FTPClient.SetNoSignal(false);
 
    EXPECT_TRUE(FTPClient.GetActive());
-   EXPECT_TRUE(FTPClient.GetNoSignal());
+   EXPECT_FALSE(FTPClient.GetNoSignal());
 
    EXPECT_STREQ(FTP_SERVER.c_str(), FTPClient.GetURL().c_str());
    EXPECT_EQ(FTP_SERVER_PORT, FTPClient.GetPort());
@@ -175,7 +210,7 @@ TEST_F(FTPClientTest, TestDownloadFile) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      EXPECT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
+      ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
 
       /* to properly show the progress bar */
       std::cout << std::endl;
@@ -200,7 +235,7 @@ TEST_F(FTPClientTest, TestDownloadFileToMem) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
+      ASSERT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
 
       /* to properly show the progress bar */
       std::cout << std::endl;
@@ -220,11 +255,8 @@ TEST_F(FTPClientTest, TestDownloadFile10Times) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      // needed to avoid test failure
-      m_pFTPClient->SetTimeout(10);
-
       for (unsigned i = 0; i < 10; ++i) {
-         EXPECT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
+         ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
 
          /* to properly show the progress bar */
          std::cout << std::endl;
@@ -247,7 +279,7 @@ TEST_F(FTPClientTest, TestDownloadFile10Times) {
 TEST_F(FTPClientTest, TestDownloadInexistantFile) {
    if (FTP_TEST_ENABLED) {
       // inexistant file, expect failure
-      EXPECT_FALSE(m_pFTPClient->DownloadFile("downloaded_inexistent_file.xxx", "inexistent_file.xxx"));
+      ASSERT_FALSE(m_pFTPClient->DownloadFile("downloaded_inexistent_file.xxx", "inexistent_file.xxx"));
    } else
       std::cout << "FTP tests are disabled !" << std::endl;
 }
@@ -270,7 +302,7 @@ TEST_F(FTPClientTest, TestGetInexistantFileInfo) {
    CFTPClient::FileInfo ResFileInfo = {0, 0.0};
 
    if (FTP_TEST_ENABLED) {
-      EXPECT_FALSE(m_pFTPClient->Info("inexistent_file.xxx", ResFileInfo));
+      ASSERT_FALSE(m_pFTPClient->Info("inexistent_file.xxx", ResFileInfo));
       EXPECT_EQ(ResFileInfo.dFileSize, 0.0);
       EXPECT_EQ(ResFileInfo.tFileMTime, 0);
    } else
@@ -336,9 +368,6 @@ TEST_F(FTPClientTest, TestUploadAndRemoveFile10Times) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestUPProgressCallback);
 
-      // needed to avoid test failure
-      m_pFTPClient->SetTimeout(10);
-
       std::ostringstream ssTimestamp;
       TimeStampTest(ssTimestamp);
 
@@ -401,7 +430,7 @@ TEST_F(FTPClientTest, TestList) {
       std::string strList;
 
       /* list root directory */
-      EXPECT_TRUE(m_pFTPClient->List("/", strList, false));
+      ASSERT_TRUE(m_pFTPClient->List("/", strList, false));
       EXPECT_FALSE(strList.empty());
    } else
       std::cout << "FTP tests are disabled !" << std::endl;
@@ -416,7 +445,7 @@ TEST_F(FTPClientTest, TestWildcardedURL) {
 
    if (FTP_TEST_ENABLED) {
       // all the content of FTP_REMOTE_DOWNLOAD_FOLDER/*
-      EXPECT_TRUE(m_pFTPClient->DownloadWildcard("Wildcard", FTP_REMOTE_DOWNLOAD_FOLDER));
+      ASSERT_TRUE(m_pFTPClient->DownloadWildcard("Wildcard", FTP_REMOTE_DOWNLOAD_FOLDER));
 
       /* TODO : check the existence of the downloaded items (Helpers_cpp project can be useful) */
 
@@ -429,7 +458,7 @@ TEST_F(FTPClientTest, TestWildcardedURL) {
 // check for failure
 TEST_F(FTPClientTest, TestWildcardedURLFailure) {
    if (FTP_TEST_ENABLED) {
-      EXPECT_FALSE(m_pFTPClient->DownloadWildcard("InexistentDir", "*"));
+      ASSERT_FALSE(m_pFTPClient->DownloadWildcard("InexistentDir", "*"));
    } else
       std::cout << "FTP tests are disabled !" << std::endl;
 }
@@ -449,10 +478,7 @@ TEST_F(FTPClientTest, TestProxyList) {
 
       m_pFTPClient->SetProxy(PROXY_SERVER);
 
-      /* to avoid long waitings if something goes wrong */
-      m_pFTPClient->SetTimeout(10);
-
-      EXPECT_TRUE(m_pFTPClient->List("/", strList));
+      ASSERT_TRUE(m_pFTPClient->List("/", strList));
       EXPECT_FALSE(strList.empty());
    } else
       std::cout << "HTTP Proxy tests are disabled !" << std::endl;
@@ -469,13 +495,279 @@ TEST_F(FTPClientTest, TestInexistantProxy) {
       /* to avoid long waitings - 5 seconds timeout */
       m_pFTPClient->SetTimeout(5);
 
-      EXPECT_FALSE(m_pFTPClient->List("/", strList, true));
+      ASSERT_FALSE(m_pFTPClient->List("/", strList, true));
       EXPECT_TRUE(strList.empty());
    } else
       std::cout << "HTTP Proxy tests are disabled !" << std::endl;
 }
 
-// TODO : SFTP tests to write...
+/* SFTP Unit Tests */
+TEST_F(SFTPClientTest, TestDownloadFile) {
+   if (SFTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestDLProgressCallback);
+
+      ASSERT_TRUE(m_pSFTPClient->DownloadFile("downloaded_file", SFTP_REMOTE_FILE));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      /* check the SHA1 sum of the downloaded file if possible */
+      if (!SFTP_REMOTE_FILE_SHA1SUM.empty()) {
+         std::string ret = sha1sum("downloaded_file");
+         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+         EXPECT_TRUE(SFTP_REMOTE_FILE_SHA1SUM == ret);
+      }
+
+      /* delete test file */
+      EXPECT_TRUE(remove("downloaded_file") == 0);
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestDownloadFileToMem) {
+   if (SFTP_TEST_ENABLED) {
+      // stores file content
+      std::vector<char> output;
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestDLProgressCallback);
+
+      ASSERT_TRUE(m_pSFTPClient->DownloadFile(SFTP_REMOTE_FILE, output));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      /* check the SHA1 sum of the downloaded file if possible */
+      if (!SFTP_REMOTE_FILE_SHA1SUM.empty()) {
+         std::string ret = sha1sum(output);
+         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+         EXPECT_TRUE(SFTP_REMOTE_FILE_SHA1SUM == ret);
+      }
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestDownloadFile10Times) {
+   if (SFTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestDLProgressCallback);
+
+      for (unsigned i = 0; i < 10; ++i) {
+         ASSERT_TRUE(m_pSFTPClient->DownloadFile("downloaded_file", SFTP_REMOTE_FILE));
+
+         /* to properly show the progress bar */
+         std::cout << std::endl;
+
+         /* check the SHA1 sum of the downloaded file if possible */
+         if (!SFTP_REMOTE_FILE_SHA1SUM.empty()) {
+            std::string ret = sha1sum("downloaded_file");
+            std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+            EXPECT_TRUE(SFTP_REMOTE_FILE_SHA1SUM == ret);
+         }
+      }
+
+      /* delete test file */
+      EXPECT_TRUE(remove("downloaded_file") == 0);
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+// Check for failure
+TEST_F(SFTPClientTest, TestDownloadInexistantFile) {
+   if (SFTP_TEST_ENABLED) {
+      // inexistant file, expect failure
+      ASSERT_FALSE(m_pSFTPClient->DownloadFile("downloaded_inexistent_file.xxx", "inexistent_file.xxx"));
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestFileInfo) {
+   CFTPClient::FileInfo ResFileInfo = {0, 0.0};
+
+   if (SFTP_TEST_ENABLED) {
+      ASSERT_TRUE(m_pSFTPClient->Info(SFTP_REMOTE_FILE, ResFileInfo));
+      EXPECT_GT(ResFileInfo.dFileSize, 0);
+      EXPECT_GT(ResFileInfo.tFileMTime, 0);
+
+      /* TODO : we can check the mtime of the remote file with an epoch value provided in the INI file */
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+// Check for failure
+TEST_F(SFTPClientTest, TestGetInexistantFileInfo) {
+   CFTPClient::FileInfo ResFileInfo = {0, 0.0};
+
+   if (SFTP_TEST_ENABLED) {
+      ASSERT_FALSE(m_pSFTPClient->Info("inexistent_file.xxx", ResFileInfo));
+      EXPECT_EQ(ResFileInfo.dFileSize, 0.0);
+      EXPECT_EQ(ResFileInfo.tFileMTime, 0);
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+// Upload Tests
+// check return code
+TEST_F(SFTPClientTest, TestUploadAndRemoveFile) {
+   if (SFTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestUPProgressCallback);
+
+      std::ostringstream ssTimestamp;
+      TimeStampTest(ssTimestamp);
+
+      // create dummy test file
+      std::ofstream ofTestUpload("test_upload.txt");
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      ofTestUpload << "Unit Test TestUploadFile executed on " + ssTimestamp.str() + "\n" +
+                          "This file is uploaded via FTPClient-C++ API.\n" +
+                          "If this file exists, that means that the unit test is passed.\n";
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+      ofTestUpload.close();
+
+      // Upload file and create a directory "upload_test"
+      ASSERT_TRUE(m_pSFTPClient->UploadFile("test_upload.txt", SFTP_REMOTE_UPLOAD_FOLDER + "upload_test/test_upload.txt", true));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      // Upload file
+      ASSERT_TRUE(m_pSFTPClient->UploadFile("test_upload.txt", SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+
+      std::cout << std::endl;
+
+      // Download the uploaded file into a vector of bytes
+      {
+         std::vector<char> uploadedFileBytes;
+         EXPECT_TRUE(m_pSFTPClient->DownloadFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt", uploadedFileBytes));
+
+         std::cout << std::endl;
+
+         /* check the SHA1 sum of the uploaded file */
+         std::string expectedSha1Sum = sha1sum("test_upload.txt");
+         std::string resultSha1Sum   = sha1sum(uploadedFileBytes);
+
+         EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+      }
+
+      // Remove file
+      ASSERT_TRUE(m_pSFTPClient->RemoveFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+
+      // delete test file
+      EXPECT_TRUE(remove("test_upload.txt") == 0);
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestUploadAndRemoveFile10Times) {
+   if (SFTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestUPProgressCallback);
+
+      std::ostringstream ssTimestamp;
+      TimeStampTest(ssTimestamp);
+
+      // create dummy test file
+      std::ofstream ofTestUpload("test_upload.txt");
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      ofTestUpload << "Unit Test TestUploadFile executed on " + ssTimestamp.str() + "\n" +
+                          "This file is uploaded via FTPClient-C++ API.\n" +
+                          "If this file exists, that means that the unit test is passed.\n";
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+      ofTestUpload.close();
+
+      for (unsigned i = 0; i < 10; ++i) {
+         // Upload file and create a directory "upload_test"
+         ASSERT_TRUE(m_pSFTPClient->UploadFile("test_upload.txt", SFTP_REMOTE_UPLOAD_FOLDER + "upload_test/test_upload.txt", true));
+
+         /* to properly show the progress bar */
+         std::cout << std::endl;
+
+         // Upload file
+         ASSERT_TRUE(m_pSFTPClient->UploadFile("test_upload.txt", SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+
+         std::cout << std::endl;
+
+         // Download the uploaded file into a vector of bytes
+         {
+            std::vector<char> uploadedFileBytes;
+            EXPECT_TRUE(m_pSFTPClient->DownloadFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt", uploadedFileBytes));
+
+            std::cout << std::endl;
+
+            /* check the SHA1 sum of the uploaded file */
+            std::string expectedSha1Sum = sha1sum("test_upload.txt");
+            std::string resultSha1Sum   = sha1sum(uploadedFileBytes);
+
+            EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+         }
+
+         // Remove file
+         ASSERT_TRUE(m_pSFTPClient->RemoveFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload.txt"));
+      }
+
+      // delete test file
+      EXPECT_TRUE(remove("test_upload.txt") == 0);
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestUploadFailure) {
+   if (SFTP_TEST_ENABLED) {
+      // upload of an inexistant file must fail.
+      ASSERT_FALSE(m_pSFTPClient->UploadFile("inexistant_file.doc", SFTP_REMOTE_UPLOAD_FOLDER + "inexistant_file.doc"));
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestList) {
+   if (SFTP_TEST_ENABLED) {
+      std::string strList;
+
+      /* list root directory */
+      ASSERT_TRUE(m_pSFTPClient->List("/", strList, false));
+      EXPECT_FALSE(strList.empty());
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+// NB : DownloadWildcard doesn't work with SFTP !
+TEST_F(SFTPClientTest, TestWildcardedURL) {
+#ifdef LINUX
+   mkdir("Wildcard", ACCESSPERMS);
+#else
+   _mkdir("Wildcard");
+#endif
+
+   if (SFTP_TEST_ENABLED) {
+      // all the content of FTP_REMOTE_DOWNLOAD_FOLDER/*
+      ASSERT_TRUE(m_pSFTPClient->DownloadWildcard("Wildcard", SFTP_REMOTE_DOWNLOAD_FOLDER));
+
+      /* TODO : check the existence of the downloaded items (Helpers_cpp project can be useful) */
+
+      /* TODO : delete recusively the files (Helpers_cpp project can be useful) */
+
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+// check for failure - DownloadWildcard doesn't work with SFTP !
+TEST_F(SFTPClientTest, TestWildcardedURLFailure) {
+   if (SFTP_TEST_ENABLED) {
+      ASSERT_FALSE(m_pSFTPClient->DownloadWildcard("InexistentDir", "*"));
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
+TEST_F(SFTPClientTest, TestCreateAndRemoveDirectory) {
+   if (SFTP_TEST_ENABLED) {
+      ASSERT_TRUE(m_pSFTPClient->CreateDir(SFTP_REMOTE_UPLOAD_FOLDER + "bookmarks"));
+      EXPECT_TRUE(m_pSFTPClient->RemoveDir(SFTP_REMOTE_UPLOAD_FOLDER + "bookmarks"));
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
 
 }  // namespace embeddedmz
 

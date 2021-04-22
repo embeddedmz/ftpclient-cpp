@@ -29,9 +29,10 @@ CFTPClient::CFTPClient(LogFnCallback Logger)
       m_uPort(0),
       m_eFtpProtocol(FTP_PROTOCOL::FTP),
       m_bActive(false),
-      m_bNoSignal(false),
+      m_bNoSignal(true),
+      m_bInsecure(false),
       m_bProgressCallbackSet(false),
-      m_eSettingsFlags(ALL_FLAGS),
+      m_eSettingsFlags(NO_FLAGS),
       m_pCurlSession(nullptr),
       m_curlHandle(CurlHandle::instance()) {
    if (!m_oLog) {
@@ -76,7 +77,7 @@ CFTPClient::~CFTPClient() {
  */
 const bool CFTPClient::InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin,
                                    const std::string &strPassword, const FTP_PROTOCOL &eFtpProtocol /* = FTP */,
-                                   const SettingsFlag &eSettingsFlags /* = ALL_FLAGS */) {
+                                   const SettingsFlag &eSettingsFlags /* = NO_FLAGS */) {
    if (strHost.empty()) {
       if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_EMPTY_HOST_MSG);
 
@@ -181,7 +182,7 @@ void CFTPClient::SetProxy(const std::string &strProxy) {
  * @endcode
  */
 std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
-   std::string strURL = m_strServer + ":" + std::to_string(m_uPort) + "/" + strRemoteFile;
+   std::string strURL = m_strServer + "/" + strRemoteFile;
 
    ReplaceString(strURL, "/", "//");
 
@@ -243,25 +244,33 @@ const bool CFTPClient::CreateDir(const std::string &strNewDir) const {
 
    std::string strRemoteFolder;
    std::string strRemoteNewFolderName;
-
+   std::string strBuf;
    bool bRet = false;
 
-   // Splitting folder name
-   std::size_t uFound = strNewDir.find_last_of("/");
-   if (uFound != std::string::npos) {
-      strRemoteFolder        = ParseURL(strNewDir.substr(0, uFound)) + "//";
-      strRemoteNewFolderName = strNewDir.substr(uFound + 1);
-   } else  // the dir. to be created is located in the root directory
-   {
+   if (m_eFtpProtocol == FTP_PROTOCOL::SFTP) {
       strRemoteFolder        = ParseURL("");
       strRemoteNewFolderName = strNewDir;
+
+      // Append the rmdir command
+      strBuf += "mkdir ";
+   } else {
+      // Splitting folder name
+      std::size_t uFound = strNewDir.find_last_of("/");
+      if (uFound != std::string::npos) {
+         strRemoteFolder        = ParseURL(strNewDir.substr(0, uFound)) + "//";
+         strRemoteNewFolderName = strNewDir.substr(uFound + 1);
+      } else  // the dir. to be created is located in the root directory
+      {
+         strRemoteFolder        = ParseURL("");
+         strRemoteNewFolderName = strNewDir;
+      }
+      // Append the MKD command
+      strBuf += "MKD ";
    }
 
    // Specify target
    curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strRemoteFolder.c_str());
 
-   // Append the mkdir command
-   std::string strBuf("MKD ");
    strBuf += strRemoteNewFolderName;
    headerlist = curl_slist_append(headerlist, strBuf.c_str());
 
@@ -269,6 +278,9 @@ const bool CFTPClient::CreateDir(const std::string &strNewDir) const {
    curl_easy_setopt(m_pCurlSession, CURLOPT_NOBODY, 1L);
    curl_easy_setopt(m_pCurlSession, CURLOPT_HEADER, 1L);
    curl_easy_setopt(m_pCurlSession, CURLOPT_FTP_CREATE_MISSING_DIRS, CURLFTP_CREATE_DIR);
+   
+   /* enable TCP keep-alive for this transfer */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_TCP_KEEPALIVE, 0L);
 
    CURLcode res = Perform();
 
@@ -318,25 +330,34 @@ const bool CFTPClient::RemoveDir(const std::string &strDir) const {
 
    std::string strRemoteFolder;
    std::string strRemoteFolderName;
-
+   std::string strBuf;
    bool bRet = false;
 
-   // Splitting folder name
-   std::size_t uFound = strDir.find_last_of("/");
-   if (uFound != std::string::npos) {
-      strRemoteFolder     = ParseURL(strDir.substr(0, uFound)) + "//";
-      strRemoteFolderName = strDir.substr(uFound + 1);
-   } else  // the dir. to be removed is located in the root directory
-   {
+   if (m_eFtpProtocol == FTP_PROTOCOL::SFTP) {
       strRemoteFolder     = ParseURL("");
       strRemoteFolderName = strDir;
+
+      // Append the rmdir command
+      strBuf += "rmdir ";
+   } else {
+      // Splitting folder name
+      std::size_t uFound = strDir.find_last_of("/");
+      if (uFound != std::string::npos) {
+         strRemoteFolder     = ParseURL(strDir.substr(0, uFound)) + "//";
+         strRemoteFolderName = strDir.substr(uFound + 1);
+      } else  // the dir. to be removed is located in the root directory
+      {
+         strRemoteFolder     = ParseURL("");
+         strRemoteFolderName = strDir;
+      }
+
+      // Append the rmd command
+      strBuf += "RMD ";
    }
 
    // Specify target
    curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strRemoteFolder.c_str());
-
-   // Append the rmd command
-   std::string strBuf("RMD ");
+   
    strBuf += strRemoteFolderName;
    headerlist = curl_slist_append(headerlist, strBuf.c_str());
 
@@ -387,25 +408,35 @@ const bool CFTPClient::RemoveFile(const std::string &strRemoteFile) const {
 
    std::string strRemoteFolder;
    std::string strRemoteFileName;
+   std::string strBuf;
 
    bool bRet = false;
 
-   // Splitting file name
-   std::size_t uFound = strRemoteFile.find_last_of("/");
-   if (uFound != std::string::npos) {
-      strRemoteFolder   = ParseURL(strRemoteFile.substr(0, uFound)) + "//";
-      strRemoteFileName = strRemoteFile.substr(uFound + 1);
-   } else  // the file to be deleted is located in the root directory
-   {
+   if (m_eFtpProtocol == FTP_PROTOCOL::SFTP) {
       strRemoteFolder   = ParseURL("");
       strRemoteFileName = strRemoteFile;
+
+      // Append the rm command
+      strBuf += "rm ";
+   } else {
+      // Splitting file name
+      std::size_t uFound = strRemoteFile.find_last_of("/");
+      if (uFound != std::string::npos) {
+         strRemoteFolder   = ParseURL(strRemoteFile.substr(0, uFound)) + "//";
+         strRemoteFileName = strRemoteFile.substr(uFound + 1);
+      } else  // the file to be deleted is located in the root directory
+      {
+         strRemoteFolder   = ParseURL("");
+         strRemoteFileName = strRemoteFile;
+      }
+      
+      // Append the delete command
+      strBuf += "DELE ";
    }
 
    // Specify target
    curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strRemoteFolder.c_str());
-
-   // Append the delete command
-   std::string strBuf("DELE ");
+   
    strBuf += strRemoteFileName;
    headerlist = curl_slist_append(headerlist, strBuf.c_str());
 
@@ -826,14 +857,16 @@ const bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::st
 const CURLcode CFTPClient::Perform() const {
    CURLcode res = CURLE_OK;
 
+   curl_easy_setopt(m_pCurlSession, CURLOPT_PORT, m_uPort);
    curl_easy_setopt(m_pCurlSession, CURLOPT_USERPWD, (m_strUserName + ":" + m_strPassword).c_str());
 
    if (m_bActive) curl_easy_setopt(m_pCurlSession, CURLOPT_FTPPORT, "-");
 
    if (m_iCurlTimeout > 0) {
       curl_easy_setopt(m_pCurlSession, CURLOPT_TIMEOUT, m_iCurlTimeout);
-      // don't want to get a sig alarm on timeout
-      curl_easy_setopt(m_pCurlSession, CURLOPT_NOSIGNAL, 1);
+   }
+   if (m_bNoSignal) {
+      curl_easy_setopt(m_pCurlSession, CURLOPT_NOSIGNAL, 1L);
    }
 
    if (!m_strProxy.empty()) {
@@ -846,10 +879,6 @@ const CURLcode CFTPClient::Perform() const {
       }
    }
 
-   if (m_bNoSignal) {
-      curl_easy_setopt(m_pCurlSession, CURLOPT_NOSIGNAL, 1L);
-   }
-
    if (m_bProgressCallbackSet) {
       curl_easy_setopt(m_pCurlSession, CURLOPT_PROGRESSFUNCTION, *GetProgressFnCallback());
       curl_easy_setopt(m_pCurlSession, CURLOPT_PROGRESSDATA, &m_ProgressStruct);
@@ -860,7 +889,7 @@ const CURLcode CFTPClient::Perform() const {
       /* We activate SSL and we require it for both control and data */
       curl_easy_setopt(m_pCurlSession, CURLOPT_USE_SSL, CURLUSESSL_ALL);
 
-   if (m_eFtpProtocol == FTP_PROTOCOL::SFTP && m_eSettingsFlags & ENABLE_SSH)
+   if (m_eFtpProtocol == FTP_PROTOCOL::SFTP && m_eSettingsFlags & ENABLE_SSH_AGENT)
       /* We activate ssh agent. For this to work you need
       to have ssh-agent running (type set | grep SSH_AGENT to check) or
       pageant on Windows (there is an icon in systray if so) */
@@ -872,6 +901,9 @@ const CURLcode CFTPClient::Perform() const {
    if (!m_strSSLKeyFile.empty()) curl_easy_setopt(m_pCurlSession, CURLOPT_SSLKEY, m_strSSLKeyFile.c_str());
 
    if (!m_strSSLKeyPwd.empty()) curl_easy_setopt(m_pCurlSession, CURLOPT_KEYPASSWD, m_strSSLKeyPwd.c_str());
+
+   curl_easy_setopt(m_pCurlSession, CURLOPT_SSL_VERIFYHOST, (m_bInsecure) ? 0L : 2L);
+   curl_easy_setopt(m_pCurlSession, CURLOPT_SSL_VERIFYPEER, (m_bInsecure) ? 0L : 1L);
 
 #ifdef DEBUG_CURL
    StartCurlDebug();

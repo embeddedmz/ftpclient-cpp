@@ -76,7 +76,7 @@ class CFTPClient {
    enum SettingsFlag {
       NO_FLAGS   = 0x00,
       ENABLE_LOG = 0x01,
-      ENABLE_SSH = 0x02,  // only for SFTP
+      ENABLE_SSH_AGENT = 0x02,  // only for SFTP, can cause auth. failure in some cases (along with m_bInsecure set to false if there's no certs)
       ALL_FLAGS  = 0xFF
    };
 
@@ -125,6 +125,7 @@ class CFTPClient {
    inline void SetTimeout(const int &iTimeout) { m_iCurlTimeout = iTimeout; }
    inline void SetActive(const bool &bEnable) { m_bActive = bEnable; }
    inline void SetNoSignal(const bool &bNoSignal) { m_bNoSignal = bNoSignal; }
+   inline void SetInsecure(const bool &bInsecure) { m_bInsecure = bInsecure; }
    inline auto GetProgressFnCallback() const { return m_fnProgressCallback.target<int (*)(void *, double, double, double, double)>(); }
    inline void *GetProgressFnCallbackOwner() const { return m_ProgressStruct.pOwner; }
    inline const std::string &GetProxy() const { return m_strProxy; }
@@ -132,6 +133,7 @@ class CFTPClient {
    inline const unsigned GetPort() const { return m_uPort; }
    inline const bool GetActive() { return m_bActive; }
    inline const bool GetNoSignal() const { return m_bNoSignal; }
+   inline const bool GetInsecure() const { return m_bInsecure; }
    inline const std::string &GetURL() const { return m_strServer; }
    inline const std::string &GetUsername() const { return m_strUserName; }
    inline const std::string &GetPassword() const { return m_strPassword; }
@@ -140,7 +142,7 @@ class CFTPClient {
 
    // Session
    const bool InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin, const std::string &strPassword,
-                          const FTP_PROTOCOL &eFtpProtocol = FTP_PROTOCOL::FTP, const SettingsFlag &SettingsFlags = ALL_FLAGS);
+                          const FTP_PROTOCOL &eFtpProtocol = FTP_PROTOCOL::FTP, const SettingsFlag &SettingsFlags = NO_FLAGS);
    virtual const bool CleanupSession();
    const CURL *GetCurlPointer() const { return m_pCurlSession; }
 
@@ -213,6 +215,7 @@ class CFTPClient {
 
    bool m_bActive;  // For active FTP connections
    bool m_bNoSignal;
+   bool m_bInsecure;
    unsigned m_uPort;
 
    FTP_PROTOCOL m_eFtpProtocol;
@@ -240,6 +243,10 @@ class CFTPClient {
 #endif
    CurlHandle &m_curlHandle;
 };
+
+inline CFTPClient::SettingsFlag operator|(CFTPClient::SettingsFlag a, CFTPClient::SettingsFlag b) {
+   return static_cast<CFTPClient::SettingsFlag>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 }  // namespace embeddedmz
 

@@ -23,7 +23,9 @@ Create an object and provide to its constructor a callable object (for log print
 void(const std::string&)
 ```
 
-Later, you can disable log printing by avoiding the flag CFTPClient::SettingsFlag::ENABLE_LOG when initializing a session.
+Later, you can enable log printing by using the flag CFTPClient::SettingsFlag::ENABLE_LOG when initializing a session.
+
+Make sure that Libcurl is compiled with SSH (https://github.com/embeddedmz/ftpclient-cpp/issues/12).
 
 ```cpp
 #include "FTPClient.h"
@@ -31,18 +33,28 @@ Later, you can disable log printing by avoiding the flag CFTPClient::SettingsFla
 CFTPClient FTPClient([](const std::string& strLogMsg){ std::cout << strLogMsg << std::endl; });
 ```
 
-Before performing one or more requests, a session must be initialized with server parameters (don't prefix the address with ftp://)
+Before performing one or more requests, a session must be initialized with server parameters (don't prefix the address with an FTP protocol scheme e.g. ftp://).
 
 ```cpp
+// Classic FTP client
 FTPClient.InitSession("127.0.0.1", 21, "username", "password");
+
+// For SFTP : 
+FTPClient.InitSession("127.0.0.1", 21, "username", "password", CFTPClient::FTP_PROTOCOL::SFTP);
+
+/* You might need to set insecure to true to turn off peer/host verification - this is the case if you don't use a CA file */
+FTPClient.SetInsecure(true);
 ```
 
-You can also set parameters such as the time out (in seconds), the HTTP proxy server etc... before sending
-your request.
+With SFTP protocol, all API commands will work except DownloadWildcard.
+
+You can also set parameters such as the time out (in seconds + enable/disable signal handling), the HTTP proxy server etc... before sending your request.
 
 To enable FTP Active Mode, use this setter (I didn't test it but it should work fine, create an issue if it doesn't work) :
 
+```cpp
 FTPClient.SetActive(true);
+```
 
 To create and remove a remote empty directory :
 
