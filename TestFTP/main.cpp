@@ -220,6 +220,9 @@ TEST_F(FTPClientTest, TestDownloadFile10Times) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
+      // needed to avoid test failure
+      m_pFTPClient->SetTimeout(10);
+
       for (unsigned i = 0; i < 10; ++i) {
          EXPECT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
 
@@ -332,6 +335,9 @@ TEST_F(FTPClientTest, TestUploadAndRemoveFile10Times) {
    if (FTP_TEST_ENABLED) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestUPProgressCallback);
+
+      // needed to avoid test failure
+      m_pFTPClient->SetTimeout(10);
 
       std::ostringstream ssTimestamp;
       TimeStampTest(ssTimestamp);
