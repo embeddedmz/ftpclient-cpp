@@ -667,9 +667,9 @@ const bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const st
 
    WildcardTransfersCallbackData data;
 #ifdef LINUX
-   data.strOutputPath = strLocalDir + ((strLocalDir[strLocalDir.length() - 1] != '/') ? "/" : "");
+   data.strOutputPath = strLocalDir + ((strLocalDir.back() != '/') ? "/" : "");
 #else
-   data.strOutputPath = strLocalDir + ((strLocalDir[strLocalDir.length() - 1] != '\\') ? "\\" : "");
+   data.strOutputPath = strLocalDir + ((strLocalDir.back() != '\\') ? "\\" : "");
 #endif
 
    std::string strPattern = ParseURL(strRemoteWildcard);
@@ -707,10 +707,10 @@ const bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const st
                 StringFormat(LOG_ERROR_CURL_GETWILD_FORMAT, m_strServer.c_str(), strRemoteWildcard.c_str(), res, curl_easy_strerror(res)));
       }
       /* folders need to be copied integrally */
-      else if (!data.vecDirList.empty() && strRemoteWildcard[strRemoteWildcard.length() - 1] == '*') {
+      else if (!data.vecDirList.empty() && strRemoteWildcard.back() == '*') {
          std::string strBaseUrl = strRemoteWildcard.substr(0, strRemoteWildcard.length() - 1);
 
-         if (!strBaseUrl.empty() && strBaseUrl[strBaseUrl.length() - 1] != '/') strBaseUrl += "/";
+         if (!strBaseUrl.empty() && strBaseUrl.back() != '/') strBaseUrl += "/";
 
          // recursively download directories
          bRet = true;
@@ -1147,11 +1147,11 @@ void CFTPClient::SetCurlTraceLogDirectory(const std::string &strPath) {
 
    if (!s_strCurlTraceLogDirectory.empty()
 #ifdef WINDOWS
-       && s_strCurlTraceLogDirectory.at(s_strCurlTraceLogDirectory.length() - 1) != '\\') {
+       && s_strCurlTraceLogDirectory.back() != '\\') {
       s_strCurlTraceLogDirectory += '\\';
    }
 #else
-       && s_strCurlTraceLogDirectory.at(s_strCurlTraceLogDirectory.length() - 1) != '/') {
+       && s_strCurlTraceLogDirectory.back() != '/') {
       s_strCurlTraceLogDirectory += '/';
    }
 #endif
