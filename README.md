@@ -40,10 +40,10 @@ Before performing one or more requests, a session must be initialized with serve
 FTPClient.InitSession("127.0.0.1", 21, "username", "password");
 
 // For SFTP : 
-FTPClient.InitSession("127.0.0.1", 21, "username", "password", CFTPClient::FTP_PROTOCOL::SFTP);
+SFTPClient.InitSession("127.0.0.1", 22, "username", "password", CFTPClient::FTP_PROTOCOL::SFTP);
 
 /* You might need to set insecure to true to turn off peer/host verification - this is the case if you don't use a CA file */
-FTPClient.SetInsecure(true);
+SFTPClient.SetInsecure(true);
 ```
 
 With SFTP protocol, all API commands will work except DownloadWildcard.
