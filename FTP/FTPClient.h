@@ -180,6 +180,11 @@ class CFTPClient {
    static void SetCurlTraceLogDirectory(const std::string &strPath);
 #endif
 
+   #ifdef WINDOWS
+   static std::string AnsiToUtf8(const std::string& ansiStr);
+   static std::wstring Utf8ToUtf16(const std::string &str);
+   #endif
+
   private:
    /* common operations are performed here */
    inline const CURLcode Perform() const;

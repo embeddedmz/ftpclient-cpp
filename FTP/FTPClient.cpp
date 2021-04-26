@@ -610,7 +610,13 @@ const bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::
    std::string strFile = ParseURL(strRemoteFile);
 
    std::ofstream ofsOutput;
-   ofsOutput.open(strLocalFile, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+   ofsOutput.open(
+       #ifdef LINUX
+       strLocalFile, // UTF-8
+       #else
+       Utf8ToUtf16(strLocalFile),
+       #endif
+       std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
 
    if (ofsOutput) {
       curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strFile.c_str());
@@ -802,8 +808,15 @@ const bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::st
    bool bRes = false;
 
    /* get the file size of the local file */
+   #ifdef LINUX
    if (stat(strLocalFile.c_str(), &file_info) == 0) {
       InputFile.open(strLocalFile, std::ifstream::in | std::ifstream::binary);
+   #else
+   static_assert(sizeof(struct stat) == sizeof(struct _stat64i32), "Oh oh !");
+   std::wstring wstrLocalFile = Utf8ToUtf16(strLocalFile);
+   if (_wstat64i32(wstrLocalFile.c_str(), reinterpret_cast<struct _stat64i32*>(&file_info)) == 0) {
+      InputFile.open(wstrLocalFile, std::ifstream::in | std::ifstream::binary);
+   #endif
       if (!InputFile) {
          if (m_eSettingsFlags & ENABLE_LOG) m_oLog(StringFormat(LOG_ERROR_FILE_UPLOAD_FORMAT, strLocalFile.c_str()));
 
@@ -1116,7 +1129,13 @@ long CFTPClient::FileIsComingCallback(struct curl_fileinfo *finfo, WildcardTrans
          // printf("SKIPPED\n");
          // return CURL_CHUNK_BGN_FUNC_SKIP;
          //}
-         data->ofsOutput.open(data->strOutputPath + finfo->filename, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+         data->ofsOutput.open(
+             #ifdef LINUX
+             data->strOutputPath + finfo->filename,
+             #else
+             Utf8ToUtf16(data->strOutputPath + finfo->filename),
+             #endif
+             std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
          if (!data->ofsOutput.is_open()) {
             return CURL_CHUNK_BGN_FUNC_FAIL;
          }
@@ -1259,6 +1278,32 @@ void CFTPClient::EndCurlDebug() const {
       m_ofFileCurlTrace << "###########################################" << std::endl;
       m_ofFileCurlTrace.close();
    }
+}
+#endif
+
+#ifdef WINDOWS
+std::string CFTPClient::AnsiToUtf8(const std::string &codepage_str) {
+   // Transcode Windows ANSI to UTF-16
+   int size = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, codepage_str.c_str(), codepage_str.length(), nullptr, 0);
+   std::wstring utf16_str(size, '\0');
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, codepage_str.c_str(), codepage_str.length(), &utf16_str[0], size);
+
+   // Transcode UTF-16 to UTF-8
+   int utf8_size = WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(), utf16_str.length(), nullptr, 0, nullptr, nullptr);
+   std::string utf8_str(utf8_size, '\0');
+   WideCharToMultiByte(CP_UTF8, 0, utf16_str.c_str(), utf16_str.length(), &utf8_str[0], utf8_size, nullptr, nullptr);
+
+   return utf8_str;
+}
+
+std::wstring CFTPClient::Utf8ToUtf16(const std::string &str) {
+   std::wstring ret;
+   int len = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0);
+   if (len > 0) {
+      ret.resize(len);
+      MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &ret[0], len);
+   }
+   return ret;
 }
 #endif
 

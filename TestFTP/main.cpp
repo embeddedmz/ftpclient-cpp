@@ -210,7 +210,14 @@ TEST_F(FTPClientTest, TestDownloadFile) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
+      #ifdef WINDOWS
+      // Convert file name from ANSI to UTF8
+      std::string remoteFileUtf8 = CFTPClient::AnsiToUtf8(FTP_REMOTE_FILE);
+      #else
+      std::string remoteFileUtf8 = FTP_REMOTE_FILE;
+      #endif
+
+      ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", remoteFileUtf8));
 
       /* to properly show the progress bar */
       std::cout << std::endl;
@@ -228,6 +235,35 @@ TEST_F(FTPClientTest, TestDownloadFile) {
       std::cout << "FTP tests are disabled !" << std::endl;
 }
 
+#ifdef WINDOWS
+TEST_F(FTPClientTest, TestSaveFileNameWithAccents) {
+   if (FTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
+      
+      // Convert file name from ANSI to UTF8
+      std::string remoteFileUtf8 = CFTPClient::AnsiToUtf8(FTP_REMOTE_FILE);
+      std::string localFileNameUtf8 = CFTPClient::AnsiToUtf8("fichier_téléchargé");
+
+      ASSERT_TRUE(m_pFTPClient->DownloadFile(localFileNameUtf8, remoteFileUtf8));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      /* check the SHA1 sum of the downloaded file if possible */
+      if (!FTP_REMOTE_FILE_SHA1SUM.empty()) {
+         std::string ret = sha1sum("fichier_téléchargé");
+         std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
+         EXPECT_TRUE(FTP_REMOTE_FILE_SHA1SUM == ret);
+      }
+
+      /* delete test file */
+      EXPECT_TRUE(remove("fichier_téléchargé") == 0);
+   } else
+      std::cout << "FTP tests are disabled !" << std::endl;
+}
+#endif
+
 TEST_F(FTPClientTest, TestDownloadFileToMem) {
    if (FTP_TEST_ENABLED) {
       // stores file content
@@ -235,7 +271,14 @@ TEST_F(FTPClientTest, TestDownloadFileToMem) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
-      ASSERT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_FILE, output));
+      #ifdef WINDOWS
+      // Convert file name from ANSI to UTF8
+      std::string remoteFileUtf8 = CFTPClient::AnsiToUtf8(FTP_REMOTE_FILE);
+      #else
+      std::string remoteFileUtf8 = FTP_REMOTE_FILE;
+      #endif
+
+      ASSERT_TRUE(m_pFTPClient->DownloadFile(remoteFileUtf8, output));
 
       /* to properly show the progress bar */
       std::cout << std::endl;
@@ -255,8 +298,15 @@ TEST_F(FTPClientTest, TestDownloadFile10Times) {
       // to display a beautiful progress bar on console
       m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestDLProgressCallback);
 
+      #ifdef WINDOWS
+         // Convert file name from ANSI to UTF8
+         std::string remoteFileUtf8 = CFTPClient::AnsiToUtf8(FTP_REMOTE_FILE);
+      #else
+         std::string remoteFileUtf8 = FTP_REMOTE_FILE;
+      #endif
+      
       for (unsigned i = 0; i < 10; ++i) {
-         ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", FTP_REMOTE_FILE));
+         ASSERT_TRUE(m_pFTPClient->DownloadFile("downloaded_file", remoteFileUtf8));
 
          /* to properly show the progress bar */
          std::cout << std::endl;
@@ -288,7 +338,14 @@ TEST_F(FTPClientTest, TestFileInfo) {
    CFTPClient::FileInfo ResFileInfo = {0, 0.0};
 
    if (FTP_TEST_ENABLED) {
-      ASSERT_TRUE(m_pFTPClient->Info(FTP_REMOTE_FILE, ResFileInfo));
+#ifdef WINDOWS
+          // Convert file name from ANSI to UTF8
+      std::string remoteFileUtf8 = CFTPClient::AnsiToUtf8(FTP_REMOTE_FILE);
+#else
+      std::string remoteFileUtf8 = FTP_REMOTE_FILE;
+#endif
+
+      ASSERT_TRUE(m_pFTPClient->Info(remoteFileUtf8, ResFileInfo));
       EXPECT_GT(ResFileInfo.dFileSize, 0);
       EXPECT_GT(ResFileInfo.tFileMTime, 0);
 
@@ -362,6 +419,63 @@ TEST_F(FTPClientTest, TestUploadAndRemoveFile) {
    } else
       std::cout << "FTP tests are disabled !" << std::endl;
 }
+
+#ifdef WINDOWS
+TEST_F(FTPClientTest, TestUploadFileNameWithAccents) {
+   if (FTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pFTPClient->SetProgressFnCallback(m_pFTPClient.get(), &TestUPProgressCallback);
+
+      std::ostringstream ssTimestamp;
+      TimeStampTest(ssTimestamp);
+
+      // Convert file name from ANSI to UTF8
+      std::string fileNameUtf8 = CFTPClient::AnsiToUtf8("fichier_à_téléverser.txt");
+
+      // create dummy test file
+      std::ofstream ofTestUpload("fichier_à_téléverser.txt");
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      ofTestUpload << "Unit Test TestUploadFile executed on " + ssTimestamp.str() + "\n" +
+                          "This file is uploaded via FTPClient-C++ API.\n" +
+                          "If this file exists, that means that the unit test is passed.\n";
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+      ofTestUpload.close();
+
+      // Upload file and create a directory "upload_test"
+      ASSERT_TRUE(m_pFTPClient->UploadFile(fileNameUtf8, FTP_REMOTE_UPLOAD_FOLDER + "upload_test_accents/" + fileNameUtf8, true));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      // Upload file
+      ASSERT_TRUE(m_pFTPClient->UploadFile(fileNameUtf8, FTP_REMOTE_UPLOAD_FOLDER + fileNameUtf8));
+
+      std::cout << std::endl;
+
+      // Download the uploaded file into a vector of bytes
+      {
+         std::vector<char> uploadedFileBytes;
+         EXPECT_TRUE(m_pFTPClient->DownloadFile(FTP_REMOTE_UPLOAD_FOLDER + fileNameUtf8, uploadedFileBytes));
+
+         std::cout << std::endl;
+
+         /* check the SHA1 sum of the uploaded file */
+         std::string expectedSha1Sum = sha1sum("fichier_à_téléverser.txt");
+         std::string resultSha1Sum   = sha1sum(uploadedFileBytes);
+
+         EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+      }
+
+      // Remove file
+      ASSERT_TRUE(m_pFTPClient->RemoveFile(FTP_REMOTE_UPLOAD_FOLDER + fileNameUtf8));
+
+      // delete test file
+      EXPECT_TRUE(remove("fichier_à_téléverser.txt") == 0);
+   } else
+      std::cout << "FTP tests are disabled !" << std::endl;
+}
+#endif
 
 TEST_F(FTPClientTest, TestUploadAndRemoveFile10Times) {
    if (FTP_TEST_ENABLED) {
