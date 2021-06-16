@@ -10,6 +10,7 @@ cmake_policy(SET CMP0022 NEW)
 PROJECT(FTPClient VERSION ${project_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
+option(FTPCLIENT_BUILD_TESTS "Create test target for ftpclient-cpp" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/lib)
@@ -24,6 +25,8 @@ endif()
 include_directories(FTP)
 
 add_subdirectory(FTP)
+
+if (FTPCLIENT_BUILD_TESTS)
 add_subdirectory(TestFTP)
 
 include(CTest)
@@ -37,3 +40,4 @@ IF (NOT TEST_INI_FILE)
 ENDIF()
 
 add_test (NAME FtpClientTest COMMAND test_ftpclient ${TEST_INI_FILE})
+endif()
