@@ -21,9 +21,13 @@ else()
 	add_definitions(-DWINDOWS)
 endif()
 
+option(SKIP_TESTS_BUILD "Skip tests build" ON)
+
 include_directories(FTP)
 
 add_subdirectory(FTP)
+
+if(NOT SKIP_TESTS_BUILD)
 add_subdirectory(TestFTP)
 
 include(CTest)
@@ -37,3 +41,4 @@ IF (NOT TEST_INI_FILE)
 ENDIF()
 
 add_test (NAME FtpClientTest COMMAND test_ftpclient ${TEST_INI_FILE})
+endif(NOT SKIP_TESTS_BUILD)
