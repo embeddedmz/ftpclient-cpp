@@ -3,6 +3,7 @@
 .project
 .settings/*
 CMakeCache.txt
+CMakeLists.txt.user
 CMakeFiles/
 FTP/.cproject
 FTP/.project

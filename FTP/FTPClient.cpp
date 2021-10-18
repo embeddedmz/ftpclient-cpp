@@ -24,21 +24,25 @@ std::string CFTPClient::s_strCurlTraceLogDirectory;
  *
  */
 CFTPClient::CFTPClient(LogFnCallback Logger)
-    : m_oLog(std::move(Logger)),
-      m_iCurlTimeout(0),
-      m_uPort(0),
-      m_eFtpProtocol(FTP_PROTOCOL::FTP),
+    :
       m_bActive(false),
       m_bNoSignal(true),
       m_bInsecure(false),
-      m_bProgressCallbackSet(false),
+      m_uPort(0),
+      m_eFtpProtocol(FTP_PROTOCOL::FTP),
       m_eSettingsFlags(NO_FLAGS),
       m_pCurlSession(nullptr),
-      m_curlHandle(CurlHandle::instance()) {
+      m_iCurlTimeout(0),
+      m_bProgressCallbackSet(false),
+      m_oLog(std::move(Logger)),
+      m_curlHandle(CurlHandle::instance())
+{
    if (!m_oLog) {
       throw std::logic_error{"Invalid logger clb applied"};
    }
 }
+
+
 
 /**
  * @brief destructor of the FTP client object
