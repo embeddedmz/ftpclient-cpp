@@ -128,53 +128,53 @@ class CFTPClient {
    inline void SetInsecure(const bool &bInsecure) { m_bInsecure = bInsecure; }
    inline auto GetProgressFnCallback() const { return m_fnProgressCallback.target<int (*)(void *, double, double, double, double)>(); }
    inline void *GetProgressFnCallbackOwner() const { return m_ProgressStruct.pOwner; }
-   inline const std::string &GetProxy() const { return m_strProxy; }
-   inline const int GetTimeout() const { return m_iCurlTimeout; }
-   inline const unsigned GetPort() const { return m_uPort; }
-   inline const bool GetActive() { return m_bActive; }
-   inline const bool GetNoSignal() const { return m_bNoSignal; }
-   inline const bool GetInsecure() const { return m_bInsecure; }
-   inline const std::string &GetURL() const { return m_strServer; }
-   inline const std::string &GetUsername() const { return m_strUserName; }
-   inline const std::string &GetPassword() const { return m_strPassword; }
-   inline const unsigned char GetSettingsFlags() const { return m_eSettingsFlags; }
-   inline const FTP_PROTOCOL GetProtocol() const { return m_eFtpProtocol; }
+   inline std::string   GetProxy() const { return m_strProxy; }
+   inline int           GetTimeout() const { return m_iCurlTimeout; }
+   inline unsigned      GetPort() const { return m_uPort; }
+   inline bool          GetActive() { return m_bActive; }
+   inline bool          GetNoSignal() const { return m_bNoSignal; }
+   inline bool          GetInsecure() const { return m_bInsecure; }
+   inline std::string   GetURL() const { return m_strServer; }
+   inline std::string   GetUsername() const { return m_strUserName; }
+   inline std::string   GetPassword() const { return m_strPassword; }
+   inline unsigned char GetSettingsFlags() const { return m_eSettingsFlags; }
+   inline FTP_PROTOCOL  GetProtocol() const { return m_eFtpProtocol; }
 
    // Session
-   const bool InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin, const std::string &strPassword,
+   bool InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin, const std::string &strPassword,
                           const FTP_PROTOCOL &eFtpProtocol = FTP_PROTOCOL::FTP, const SettingsFlag &SettingsFlags = NO_FLAGS);
-   virtual const bool CleanupSession();
+   virtual bool CleanupSession();
    const CURL *GetCurlPointer() const { return m_pCurlSession; }
 
    // FTP requests
-   const bool CreateDir(const std::string &strNewDir) const;
+   bool CreateDir(const std::string &strNewDir) const;
 
-   const bool RemoveDir(const std::string &strDir) const;
+   bool RemoveDir(const std::string &strDir) const;
 
-   const bool RemoveFile(const std::string &strRemoteFile) const;
+   bool RemoveFile(const std::string &strRemoteFile) const;
 
    /* Checks a single file's size and mtime from an FTP server */
-   const bool Info(const std::string &strRemoteFile, struct FileInfo &oFileInfo) const;
+   bool Info(const std::string &strRemoteFile, struct FileInfo &oFileInfo) const;
 
-   const bool List(const std::string &strRemoteFolder, std::string &strList, bool bOnlyNames = true) const;
+   bool List(const std::string &strRemoteFolder, std::string &strList, bool bOnlyNames = true) const;
 
-   const bool DownloadFile(const std::string &strLocalFile, const std::string &strRemoteFile) const;
+   bool DownloadFile(const std::string &strLocalFile, const std::string &strRemoteFile) const;
 
-   const bool DownloadFile(const std::string &strRemoteFile, std::vector<char> &data) const;
+   bool DownloadFile(const std::string &strRemoteFile, std::vector<char> &data) const;
 
-   const bool DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const;
+   bool DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const;
 
-   const bool UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir = false) const;
+   bool UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir = false) const;
 
    // SSL certs
    void SetSSLCertFile(const std::string &strPath) { m_strSSLCertFile = strPath; }
-   const std::string &GetSSLCertFile() const { return m_strSSLCertFile; }
+   std::string GetSSLCertFile() const { return m_strSSLCertFile; }
 
    void SetSSLKeyFile(const std::string &strPath) { m_strSSLKeyFile = strPath; }
-   const std::string &GetSSLKeyFile() const { return m_strSSLKeyFile; }
+   std::string GetSSLKeyFile() const { return m_strSSLKeyFile; }
 
    void SetSSLKeyPassword(const std::string &strPwd) { m_strSSLKeyPwd = strPwd; }
-   const std::string &GetSSLKeyPwd() const { return m_strSSLKeyPwd; }
+   std::string GetSSLKeyPwd() const { return m_strSSLKeyPwd; }
 
 #ifdef DEBUG_CURL
    static void SetCurlTraceLogDirectory(const std::string &strPath);
@@ -187,7 +187,7 @@ class CFTPClient {
 
   private:
    /* common operations are performed here */
-   inline const CURLcode Perform() const;
+   inline CURLcode Perform() const;
    inline std::string ParseURL(const std::string &strURL) const;
 
    // Curl callbacks

@@ -9,6 +9,8 @@
 #include <iterator>
 #include <stdexcept>
 
+#define UNUSED(x) static_cast<void>(x);
+
 namespace embeddedmz {
 
 // Static members initialization
@@ -79,7 +81,7 @@ CFTPClient::~CFTPClient() {
  *    m_pFTPClient->InitSession("ftp://127.0.0.1", 21, "username", "password");
  * @endcode
  */
-const bool CFTPClient::InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin,
+bool CFTPClient::InitSession(const std::string &strHost, const unsigned &uPort, const std::string &strLogin,
                                    const std::string &strPassword, const FTP_PROTOCOL &eFtpProtocol /* = FTP */,
                                    const SettingsFlag &eSettingsFlags /* = NO_FLAGS */) {
    if (strHost.empty()) {
@@ -118,7 +120,7 @@ const bool CFTPClient::InitSession(const std::string &strHost, const unsigned &u
  *    objFTPClient.CleanupSession();
  * @endcode
  */
-const bool CFTPClient::CleanupSession() {
+bool CFTPClient::CleanupSession() {
    if (!m_pCurlSession) {
       if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
 
@@ -230,7 +232,7 @@ std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
  *    // Will create bookmarks directory under the upload dir (must exist).
  * @endcode
  */
-const bool CFTPClient::CreateDir(const std::string &strNewDir) const {
+bool CFTPClient::CreateDir(const std::string &strNewDir) const {
    if (strNewDir.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -316,7 +318,7 @@ const bool CFTPClient::CreateDir(const std::string &strNewDir) const {
  *    // Will remove bookmarks directory, upload must exist.
  * @endcode
  */
-const bool CFTPClient::RemoveDir(const std::string &strDir) const {
+bool CFTPClient::RemoveDir(const std::string &strDir) const {
    if (strDir.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -394,7 +396,7 @@ const bool CFTPClient::RemoveDir(const std::string &strDir) const {
  *    // e.g. : Will delete ftp://127.0.0.1/documents/Config.txt
  * @endcode
  */
-const bool CFTPClient::RemoveFile(const std::string &strRemoteFile) const {
+bool CFTPClient::RemoveFile(const std::string &strRemoteFile) const {
    if (strRemoteFile.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -479,7 +481,7 @@ const bool CFTPClient::RemoveFile(const std::string &strRemoteFile) const {
  * 15:04:45 2016
  * @endcode
  */
-const bool CFTPClient::Info(const std::string &strRemoteFile, struct FileInfo &oFileInfo) const {
+bool CFTPClient::Info(const std::string &strRemoteFile, struct FileInfo &oFileInfo) const {
    if (strRemoteFile.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -547,7 +549,7 @@ const bool CFTPClient::Info(const std::string &strRemoteFile, struct FileInfo &o
  *    // lists the root of the remote FTP server with all the infos.
  * @endcode
  */
-const bool CFTPClient::List(const std::string &strRemoteFolder, std::string &strList, bool bOnlyNames /* = true */) const {
+bool CFTPClient::List(const std::string &strRemoteFolder, std::string &strList, bool bOnlyNames /* = true */) const {
    if (strRemoteFolder.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -595,7 +597,7 @@ const bool CFTPClient::List(const std::string &strRemoteFolder, std::string &str
  * "upload/pictures/imagination.jpg");
  * @endcode
  */
-const bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::string &strRemoteFile) const {
+bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::string &strRemoteFile) const {
    if (strLocalFile.empty() || strRemoteFile.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -650,7 +652,7 @@ const bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::
  * @retval false  The file couldn't be downloaded. Check the log messages for
  * more information.
  */
-const bool CFTPClient::DownloadFile(const std::string &strRemoteFile, std::vector<char> &data) const {
+bool CFTPClient::DownloadFile(const std::string &strRemoteFile, std::vector<char> &data) const {
    if (strRemoteFile.empty()) return false;
    if (!m_pCurlSession) {
       if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
@@ -690,7 +692,7 @@ const bool CFTPClient::DownloadFile(const std::string &strRemoteFile, std::vecto
  *    m_pFTPClient->DownloadWildcard("", "");
  * @endcode
  */
-const bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const {
+bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const {
    if (strLocalDir.empty() || strRemoteWildcard.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -791,7 +793,7 @@ const bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const st
  *    // if they don't exist and if the connected user has the proper rights.
  * @endcode
  */
-const bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir) const {
+bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir) const {
    if (strLocalFile.empty() || strRemoteFile.empty()) return false;
 
    if (!m_pCurlSession) {
@@ -868,7 +870,7 @@ const bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::st
  * @retval false  The request couldn't be performed.
  *
  */
-const CURLcode CFTPClient::Perform() const {
+ CURLcode CFTPClient::Perform() const {
    CURLcode res = CURLE_OK;
 
    curl_easy_setopt(m_pCurlSession, CURLOPT_PORT, m_uPort);
@@ -991,9 +993,12 @@ std::string& to)
 // CURL CALLBACKS
 
 size_t CFTPClient::ThrowAwayCallback(void *ptr, size_t size, size_t nmemb, void *data) {
-   /* we are not interested in the headers itself,
-   so we only return the size we would have saved ... */
-   return size * nmemb;
+    /* we are not interested in the headers itself,
+    so we only return the size we would have saved ... */
+
+    UNUSED(ptr)
+    UNUSED(data)
+    return size * nmemb;
 }
 
 /**
@@ -1090,20 +1095,22 @@ size_t CFTPClient::ReadFromFileCallback(void *ptr, size_t size, size_t nmemb, vo
 long CFTPClient::FileIsComingCallback(struct curl_fileinfo *finfo, WildcardTransfersCallbackData *data, int remains) {
    // printf("%3d %40s %10luB ", remains, finfo->filename, (unsigned
    // long)finfo->size);
-   switch (finfo->filetype) {
-      case CURLFILETYPE_DIRECTORY:
-         // printf(" DIR\n");
-         data->vecDirList.push_back(finfo->filename);
+    UNUSED(remains)
+
+    switch (finfo->filetype) {
+    case CURLFILETYPE_DIRECTORY:
+        // printf(" DIR\n");
+        data->vecDirList.push_back(finfo->filename);
 #ifdef LINUX
-         if (mkdir((data->strOutputPath + finfo->filename).c_str(), ACCESSPERMS) != 0 && errno != EEXIST)
+        if (mkdir((data->strOutputPath + finfo->filename).c_str(), ACCESSPERMS) != 0 && errno != EEXIST)
 #else
-         if (_mkdir((data->strOutputPath + finfo->filename).c_str()) != 0 && errno != EEXIST)
+        if (_mkdir((data->strOutputPath + finfo->filename).c_str()) != 0 && errno != EEXIST)
 #endif
-         {
+        {
             std::cerr << "Problem creating directory (errno=" << errno << "): " << data->strOutputPath + finfo->filename << std::endl;
             return CURL_CHUNK_BGN_FUNC_FAIL;
-         }
-         /*else
+        }
+        /*else
          {
             printf("Directory '%s' was successfully created\n", finfo->filename);
             #ifdef LINUX
@@ -1121,30 +1128,30 @@ long CFTPClient::FileIsComingCallback(struct curl_fileinfo *finfo, WildcardTrans
          removing directory '%s'\n", (data->strOutputPath +
          finfo->filename).c_str());
          }*/
-         break;
-      case CURLFILETYPE_FILE:
-         // printf("FILE ");
-         /* do not transfer files >= 50B */
-         // if (finfo->size > 50)
-         //{
-         // printf("SKIPPED\n");
-         // return CURL_CHUNK_BGN_FUNC_SKIP;
-         //}
-         data->ofsOutput.open(
-             #ifdef LINUX
-             data->strOutputPath + finfo->filename,
-             #else
-             Utf8ToUtf16(data->strOutputPath + finfo->filename),
-             #endif
-             std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
-         if (!data->ofsOutput.is_open()) {
+        break;
+    case CURLFILETYPE_FILE:
+        // printf("FILE ");
+        /* do not transfer files >= 50B */
+        // if (finfo->size > 50)
+        //{
+        // printf("SKIPPED\n");
+        // return CURL_CHUNK_BGN_FUNC_SKIP;
+        //}
+        data->ofsOutput.open(
+            #ifdef LINUX
+                    data->strOutputPath + finfo->filename,
+            #else
+                    Utf8ToUtf16(data->strOutputPath + finfo->filename),
+            #endif
+                    std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
+        if (!data->ofsOutput.is_open()) {
             return CURL_CHUNK_BGN_FUNC_FAIL;
-         }
-         break;
-      default:
-         // printf("OTHER\n");
-         break;
-   }
+        }
+        break;
+    default:
+        // printf("OTHER\n");
+        break;
+    }
 
    return CURL_CHUNK_BGN_FUNC_OK;
 }
