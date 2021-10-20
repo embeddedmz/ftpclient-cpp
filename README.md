@@ -148,13 +148,9 @@ The unit tests "TestDownloadFile" and "TestUploadAndRemoveFile" demonstrate how 
 
 ## Thread Safety
 
-If you are using other libraries that make use of libcurl, please take a look at this issue (https://github.com/embeddedmz/ftpclient-cpp/issues/4). In short, remove from this project libcurl's global initialization/clean-up code, and manually call these functions, at your program startup/shutdown (or let your 3rd party library handle this).
+Do not share CFTPClient objects across threads as this would mean accessing libcurl handles from multiple threads at the same time which is not allowed.
 
-Do not share CFTPClient objects across threads as this would mean accessing libcurl handles from multiple threads
-at the same time which is not allowed.
-
-The method SetNoSignal can be used to skip all signal handling. This is important in multi-threaded applications as DNS
-resolution timeouts use signals. The signal handlers quite readily get executed on other threads.
+The method SetNoSignal can be used to skip all signal handling. This is important in multi-threaded applications as DNS resolution timeouts use signals. The signal handlers quite readily get executed on other threads.
 
 ## HTTP Proxy Tunneling Support
 
@@ -386,3 +382,18 @@ Try to preserve the existing coding style (Hungarian notation, indentation etc..
 If you compile the test program with the preprocessor macro DEBUG_CURL, to enable curl debug informations,
 the static library used must also be compiled with that macro. Don't forget to mention a path where to store
 log files in the INI file if you want to use that feature in the unit test program (curl_logs_folder under [local])
+
+### File names format when compiling with Visual Studio (Windows users)
+
+It is assumed that the FTP servers you intend to connect with support UTF-8. You must feed the FTP client API with paths/file names encoded in UTF-8 and NOT in ANSI (Windows-1252 on Western/U.S. systems but it can represent certain other Windows code pages on other systems, ANSI is just an extension for ASCII).
+
+For example, take look at the unit test "TestDownloadFile", the static helper method CFTPClient::AnsiToUtf8 can help you in converting ANSI encoded strings to UTF8.
+
+If you restrict yourself to ASCII characters in your ANSI string, you don't need to convert your ANSI strings to UTF-8.
+
+### Using ftpclient-cpp inside a DLL on Windows
+
+According to this libcurl documentation [page](https://curl.se/libcurl/c/curl_global_init.html) I quote :
+"If you are initializing libcurl from a Windows DLL you should not initialize it from DllMain or a static initializer because Windows holds the loader lock during that time and it could cause a deadlock."
+
+So, please avoid to use this library in a DLL or if it's not possible you will have just to made the global libcurl initialization/cleaup stuff yourself (look at CurlHandle class and just call the curl_global_init() once before the beginning of the logic of your program in the main() function and curl_global_cleanup at the end of it and don't forget to remove the instance of that class in the CFTPClient class to fix this issue).
