@@ -221,7 +221,7 @@ std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
 /**
  * @brief creates a remote directory
  *
- * @param [in] strNewDir the remote direcotry to be created.
+ * @param [in] strNewDir the remote direcotry to be created encoded in UTF-8 format.
  *
  * @retval true   Successfully created a directory.
  * @retval false  The directory couldn't be created.
@@ -307,7 +307,7 @@ bool CFTPClient::CreateDir(const std::string &strNewDir) const {
  * yhe user must use RemoveFile() on all directory's files then use RemoveDir to
  * delete the latter.
  *
- * @param [in] strDir the remote direcotry to be removed.
+ * @param [in] strDir the remote direcotry to be removed encoded in UTF-8 format.
  *
  * @retval true   Successfully removed a directory.
  * @retval false  The directory couldn't be removed.
@@ -385,7 +385,7 @@ bool CFTPClient::RemoveDir(const std::string &strDir) const {
 /**
  * @brief deletes a remote file
  *
- * @param [in] strRemoteFile the URL of the remote file
+ * @param [in] strRemoteFile the URL of the remote file encoded in UTF-8 format.
  *
  * @retval true   Successfully deleted the file.
  * @retval false  The file couldn't be deleted.
@@ -465,7 +465,7 @@ bool CFTPClient::RemoveFile(const std::string &strRemoteFile) const {
 /**
  * @brief requests the mtime (epoch) and the size of a remote file.
  *
- * @param [in] strRemoteFile URN of the remote file
+ * @param [in] strRemoteFile URN of the remote file encoded in UTF-8 format.
  * @param [out] oFileInfo time_t will be updated with the file's mtime and size.
  *
  * @retval true   Successfully gathered the file info time and updated
@@ -535,8 +535,8 @@ bool CFTPClient::Info(const std::string &strRemoteFile, struct FileInfo &oFileIn
  * the list can contain only names or can be detailed
  * entries/names will be separated with LF ('\n')
  *
- * @param [in] strRemoteFolder URL of the remote location to be listed
- * @param [out] strList will contain the directory entries (detailed or not)
+ * @param [in] strRemoteFolder URL of the remote location to be listed encoded in UTF-8 format.
+ * @param [out] strList will contain the directory entries (detailed or not) encoded in UTF-8 format.
  * @param [in] bOnlyNames detailed list or only names
  *
  * @retval true   Successfully listed the remote folder and updated FtpFiles.
@@ -584,8 +584,8 @@ bool CFTPClient::List(const std::string &strRemoteFolder, std::string &strList, 
 /**
  * @brief downloads a remote file
  *
- * @param [in] strLocalFile complete path of the downloaded file.
- * @param [in] strRemoteFile URL of the remote file.
+ * @param [in] strLocalFile complete path of the downloaded file encoded in UTF-8 format.
+ * @param [in] strRemoteFile URL of the remote file encoded in UTF-8 format.
  *
  * @retval true   Successfully downloaded the file.
  * @retval false  The file couldn't be downloaded. Check the log messages for
@@ -645,7 +645,7 @@ bool CFTPClient::DownloadFile(const std::string &strLocalFile, const std::string
 /**
  * @brief downloads a remote file to memory
  *
- * @param [in] strRemoteFile URI of remote file
+ * @param [in] strRemoteFile URI of remote file encoded in UTF-8 format.
  * @param [out] data vector of bytes
  *
  * @retval true   Successfully downloaded the file.
@@ -680,8 +680,8 @@ bool CFTPClient::DownloadFile(const std::string &strRemoteFile, std::vector<char
 /**
  * @brief downloads all elements according that match the wildcarded URL
  *
- * @param [in] strLocalFile Complete path where the elements will be downloaded
- * @param [in] strRemoteWildcard Wildcarded pattern to be downloaded
+ * @param [in] strLocalFile Complete path where the elements will be downloaded encoded in UTF-8 format.
+ * @param [in] strRemoteWildcard Wildcarded pattern to be downloaded encoded in UTF-8 format.
  *
  * @retval true   All the elements have been downloaded.
  * @retval false  Some or all files or dir have not been downloaded or resp.
@@ -773,9 +773,9 @@ bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::str
 /**
  * @brief uploads a local file to a remote folder.
  *
- * @param [in] strLocalFile Complete path of the file to upload.
+ * @param [in] strLocalFile Complete path of the file to upload encoded in UTF-8 format.
  * @param [in] strRemoteFile Complete URN of the remote location (with the file
- * name).
+ * name) encoded in UTF-8 format.
  * @param [in] bCreateDir Enable or disable creation of remote missing
  * directories contained in the URN.
  *
