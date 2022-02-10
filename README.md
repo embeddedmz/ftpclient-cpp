@@ -168,6 +168,12 @@ std::string strList;
 FTPClient.List("/", strList);
 ```
 
+if you need to specify a user and password
+
+```cpp
+FTPClient.SetProxyUserPwd("user:password");
+```
+
 ## Installation
 
 You will need CMake to generate a makefile for the static library or to build the tests/code coverage program.
