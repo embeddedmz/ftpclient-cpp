@@ -179,8 +179,6 @@ void CFTPClient::SetProxy(const std::string &strProxy) {
  *
  */
 void CFTPClient::SetProxyUserPwd(const std::string &strProxyUserPwd) {
-   if (strProxyUserPwd.empty()) return;
-    
    m_strProxyUserPwd = strProxyUserPwd;
 };
     
