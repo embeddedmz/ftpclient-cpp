@@ -120,6 +120,7 @@ class CFTPClient {
    // Setters - Getters (for unit tests)
    void SetProgressFnCallback(void *pOwner, const ProgressFnCallback &fnCallback);
    void SetProxy(const std::string &strProxy);
+   void SetProxyUserPwd(const std::string &strProxyUserPwd);
    inline void SetTimeout(const int &iTimeout) { m_iCurlTimeout = iTimeout; }
    inline void SetActive(const bool &bEnable) { m_bActive = bEnable; }
    inline void SetNoSignal(const bool &bNoSignal) { m_bNoSignal = bNoSignal; }
@@ -127,6 +128,7 @@ class CFTPClient {
    inline auto GetProgressFnCallback() const { return m_fnProgressCallback.target<int (*)(void *, double, double, double, double)>(); }
    inline void *GetProgressFnCallbackOwner() const { return m_ProgressStruct.pOwner; }
    inline std::string   GetProxy() const { return m_strProxy; }
+   inline std::string   GetProxyUserPwd() const { return m_strProxyUserPwd; }
    inline int           GetTimeout() const { return m_iCurlTimeout; }
    inline unsigned      GetPort() const { return m_uPort; }
    inline bool          GetActive() { return m_bActive; }
@@ -215,6 +217,7 @@ class CFTPClient {
    std::string m_strPassword;
    std::string m_strServer;
    std::string m_strProxy;
+   std::string m_strProxyUserPwd;
 
    bool m_bActive;  // For active FTP connections
    bool m_bNoSignal;
