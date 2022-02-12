@@ -901,7 +901,7 @@ bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &
       curl_easy_setopt(m_pCurlSession, CURLOPT_PROXY, m_strProxy.c_str());
       curl_easy_setopt(m_pCurlSession, CURLOPT_HTTPPROXYTUNNEL, 1L);
        
-       if(!m_strProxyUserPwd.empty()) {
+       if (!m_strProxyUserPwd.empty()) {
            curl_easy_setopt(m_pCurlSession, CURLOPT_PROXYUSERPWD, m_strProxyUserPwd);
        }
 
