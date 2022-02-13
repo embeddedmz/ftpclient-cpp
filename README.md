@@ -1,5 +1,5 @@
 ﻿# FTP client for C++
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT) [![CMake Build Matrix](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml)
 
 
 ## About
