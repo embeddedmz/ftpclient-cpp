@@ -1,6 +1,5 @@
 ﻿# FTP client for C++
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT) [![CMake Build Matrix](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml)
-
+[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT) [![CMake Build Matrix](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml/badge.svg)](https://github.com/ksv87/ftpclient-cpp/actions/workflows/ci.yml) ![GitHub all releases](https://img.shields.io/github/downloads/ksv87/ftpclient-cpp/total?style=plastic)
 
 ## About
 This is a simple FTP client for C++. It wraps libcurl for FTP requests and meant to be a portable
