@@ -209,7 +209,7 @@ To directly run the unit test binary, you must indicate the path of the INI conf
 
 Install [vcpkg](https://github.com/microsoft/vcpkg) then install libcurl (use 'x86-windows' for the 32-bit version) :
 ```Shell
-.\vcpkg install curl:x64-windows
+.\vcpkg install curl curl[openssl] curl[ssh] --triplet=x64-windows
 ```
 
 If you have a french Visual Studio version, don't forget to install the english language pack (vcpkg will tell you this anyway).
