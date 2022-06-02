@@ -296,6 +296,8 @@ C:\Users\Amine\Documents\Work\PROJECTS\GitHub\ftpclient_build\bin\[Debug | Relea
 
 ## Run Unit Tests
 
+First of all, the CMake option SKIP_TESTS_BUILD must be set to "OFF" (via CMake-GUI then pressing on the "Configure" button or if you are using a command line via the argument -DSKIP_TESTS_BUILD=OFF).
+
 [simpleini](https://github.com/brofield/simpleini) is used to gather unit tests parameters from
 an INI configuration file. You need to fill that file with FTP and/or SFTP parameters.
 You can also disable some tests (HTTP proxy for instance) and indicate
