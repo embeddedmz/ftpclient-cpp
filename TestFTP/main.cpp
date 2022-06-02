@@ -293,6 +293,7 @@ TEST_F(FTPClientTest, TestDownloadFileToMem) {
       std::cout << "FTP tests are disabled !" << std::endl;
 }
 
+// this test was created when I was using a buggy FTP server aka FileZilla
 TEST_F(FTPClientTest, TestDownloadFile10Times) {
    if (FTP_TEST_ENABLED) {
       // to display a beautiful progress bar on console
