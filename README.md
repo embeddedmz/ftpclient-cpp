@@ -13,7 +13,7 @@ Compilation has been tested with:
 Underlying libraries:
 - [libcurl](http://curl.haxx.se/libcurl/)
 
-Windows Users : vcpkg (Microsoft C++ Library Manager) can be used to easily install libcurl and generate the Visual Studio solution with CMake. With vcpkg, no need to manually copy the DLL in the output directory, vcpkg handles all that ! Look at "Building under Windows via Visual Studio" section, for instructions.
+Windows Users : vcpkg (Microsoft C++ Library Manager) can be used to easily install libcurl, Google Test (GTest) for the unit tests program and generate the Visual Studio solution with CMake. With vcpkg, no need to manually copy the DLL in the output directory, vcpkg handles all that ! Look at "Building under Windows via Visual Studio" section, for instructions.
 
 ## Usage
 Create an object and provide to its constructor a callable object (for log printing) having this signature :
@@ -207,9 +207,9 @@ To directly run the unit test binary, you must indicate the path of the INI conf
 
 1. New Procedure (with vcpkg) :
 
-Install [vcpkg](https://github.com/microsoft/vcpkg) then install libcurl (use 'x86-windows' for the 32-bit version) :
+Install [vcpkg](https://github.com/microsoft/vcpkg) then install libcurl (use 'x86-windows' for the 32-bit version) and Google Test (GTest) :
 ```Shell
-.\vcpkg install curl curl[openssl] curl[ssh] --triplet=x64-windows
+.\vcpkg install curl curl[openssl] curl[ssh] gtest --triplet=x64-windows
 ```
 
 If you have a french Visual Studio version, don't forget to install the english language pack (vcpkg will tell you this anyway).
