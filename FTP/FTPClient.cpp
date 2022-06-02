@@ -201,6 +201,7 @@ std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
    std::string strURL = m_strServer + "/" + strRemoteFile;
 
    ReplaceString(strURL, "/", "//");
+   ReplaceString(strURL, " ", "%20"); //fixes folders with spaces not working
 
    std::string strUri = strURL;
 
