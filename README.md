@@ -92,6 +92,8 @@ FTPClient.UploadFile("C:\\test_upload.txt", "/upload/documents/test_upload.txt")
 FTPClient.RemoveFile("/upload/documents/test_upload.txt");
 ```
 
+You also have a method to append data to a remote file (Issue #34).
+
 To list a remote directory:
 
 ```cpp

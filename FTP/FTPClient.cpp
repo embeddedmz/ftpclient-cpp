@@ -872,6 +872,85 @@ bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &
    return bRes;
 }
 
+bool CFTPClient::AppendFile(const std::string &strLocalFile, const size_t fileOffset, const std::string &strRemoteFile,
+                            const bool &bCreateDir) const {
+   if (strLocalFile.empty() || strRemoteFile.empty()) return false;
+
+   if (!m_pCurlSession) {
+      if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
+
+      return false;
+   }
+   // Reset is mandatory to avoid bad surprises
+   curl_easy_reset(m_pCurlSession);
+
+   std::ifstream InputFile;
+   std::string strLocalRemoteFile = ParseURL(strRemoteFile);
+
+   struct stat file_info;
+   bool bRes = false;
+
+/* get the file size of the local file */
+#ifdef LINUX
+   if (stat(strLocalFile.c_str(), &file_info) == 0) {
+      InputFile.open(strLocalFile, std::ifstream::in | std::ifstream::binary);
+#else
+   static_assert(sizeof(struct stat) == sizeof(struct _stat64i32), "Oh oh !");
+   std::wstring wstrLocalFile = Utf8ToUtf16(strLocalFile);
+   if (_wstat64i32(wstrLocalFile.c_str(), reinterpret_cast<struct _stat64i32 *>(&file_info)) == 0) {
+      InputFile.open(wstrLocalFile, std::ifstream::in | std::ifstream::binary);
+#endif
+      if (!InputFile) {
+         if (m_eSettingsFlags & ENABLE_LOG) m_oLog(StringFormat(LOG_ERROR_FILE_UPLOAD_FORMAT, strLocalFile.c_str()));
+
+         return false;
+      }
+
+      // check of the offset is less than the file size
+      if (fileOffset >= file_info.st_size) {
+         if (m_eSettingsFlags & ENABLE_LOG)
+            m_oLog("ERROR Incorrect offset !");  // if this code is OK use existing coding style for log msgs
+         return false;
+      }
+
+      InputFile.seekg(fileOffset, InputFile.beg);  // Sets the position of the next character to be extracted from the input stream.
+
+      /* specify target */
+      curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strLocalRemoteFile.c_str());
+
+      /* we want to use our own read function */
+      curl_easy_setopt(m_pCurlSession, CURLOPT_READFUNCTION, ReadFromFileCallback);
+
+      /* now specify which file to upload */
+      curl_easy_setopt(m_pCurlSession, CURLOPT_READDATA, &InputFile);
+
+      /* Set the size of the file to upload (optional).  If you give a *_LARGE
+      option you MUST make sure that the type of the passed-in argument is a
+      curl_off_t. If you use CURLOPT_INFILESIZE (without _LARGE) you must
+      make sure that to pass in a type 'long' argument. */
+      curl_easy_setopt(m_pCurlSession, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(file_info.st_size - fileOffset));  // Important !
+
+      /* enable uploading */
+      curl_easy_setopt(m_pCurlSession, CURLOPT_UPLOAD, 1L);
+      curl_easy_setopt(m_pCurlSession, CURLOPT_APPEND, 1L);
+
+      if (bCreateDir) curl_easy_setopt(m_pCurlSession, CURLOPT_FTP_CREATE_MISSING_DIRS, CURLFTP_CREATE_DIR);
+
+      // TODO add the possibility to rename the file upon upload finish....
+
+      CURLcode res = Perform();
+
+      if (res != CURLE_OK) {
+         if (m_eSettingsFlags & ENABLE_LOG)
+            m_oLog(StringFormat(LOG_ERROR_CURL_UPLOAD_FORMAT, strLocalFile.c_str(), res, curl_easy_strerror(res)));
+      } else
+         bRes = true;
+   }
+   InputFile.close();
+
+   return bRes;
+}
+
 /**
  * @brief performs the chosen FTP request
  * sets up the common settings (Timeout, proxy,...)
