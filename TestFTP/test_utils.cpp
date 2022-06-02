@@ -67,6 +67,7 @@ bool GlobalTestInit(const std::string& strConfFile) {
    FTP_PASSWORD               = ini.GetValue("ftp", "password", "");
    FTP_REMOTE_FILE            = ini.GetValue("ftp", "remote_file", "");
    FTP_REMOTE_FILE_SHA1SUM    = ini.GetValue("ftp", "remote_file_sha1sum", "");
+   std::transform(FTP_REMOTE_FILE_SHA1SUM.begin(), FTP_REMOTE_FILE_SHA1SUM.end(), FTP_REMOTE_FILE_SHA1SUM.begin(), ::tolower);
    FTP_REMOTE_UPLOAD_FOLDER   = ini.GetValue("ftp", "remote_upload_folder", "");
    FTP_REMOTE_DOWNLOAD_FOLDER = ini.GetValue("ftp", "remote_download_folder", "");
 
@@ -75,7 +76,9 @@ bool GlobalTestInit(const std::string& strConfFile) {
    SFTP_USERNAME               = ini.GetValue("sftp", "username", "");
    SFTP_PASSWORD               = ini.GetValue("sftp", "password", "");
    SFTP_REMOTE_FILE            = ini.GetValue("sftp", "remote_file", "");
+   SFTP_REMOTE_FILE            = ini.GetValue("sftp", "remote_file", "");
    SFTP_REMOTE_FILE_SHA1SUM    = ini.GetValue("sftp", "remote_file_sha1sum", "");
+   std::transform(SFTP_REMOTE_FILE_SHA1SUM.begin(), SFTP_REMOTE_FILE_SHA1SUM.end(), SFTP_REMOTE_FILE_SHA1SUM.begin(), ::tolower);
    SFTP_REMOTE_UPLOAD_FOLDER   = ini.GetValue("sftp", "remote_upload_folder", "");
    SFTP_REMOTE_DOWNLOAD_FOLDER = ini.GetValue("sftp", "remote_download_folder", "");
 
