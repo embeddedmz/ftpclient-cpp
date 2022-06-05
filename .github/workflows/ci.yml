@@ -14,7 +14,7 @@ jobs:
             name: "Windows Latest MSVC", artifact: "Windows.tar.xz",
             os: windows-latest,
             build_type: "Release", cc: "cl", cxx: "cl",
-            environment_script: "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat\""
+            environment_script: "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
           }
         - {
             name: "Ubuntu Latest GCC", artifact: "Linux.tar.xz",
