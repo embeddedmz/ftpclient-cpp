@@ -103,6 +103,9 @@ jobs:
               set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
             endif()
           endforeach()
+          execute_process(
+            COMMAND cmd /c "${{ matrix.config.environment_script }}"
+          )
         endif()
 
         file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/ninja" ninja_program)
