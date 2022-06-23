@@ -146,12 +146,12 @@ bool CFTPClient::CleanupSession() {
  * @param [in] fnCallback callback to progress function
  *
  */
-void CFTPClient::SetProgressFnCallback(void *pOwner, const ProgressFnCallback &fnCallback) {
+void CFTPClient::SetProgressFnCallback(void *pOwner, const ProgressFnCallback &fnCallback, const bool enable /*= true*/) {
    m_ProgressStruct.pOwner       = pOwner;
    m_fnProgressCallback          = fnCallback;
    m_ProgressStruct.pCurl        = m_pCurlSession;
    m_ProgressStruct.dLastRunTime = 0;
-   m_bProgressCallbackSet        = true;
+   m_bProgressCallbackSet        = enable;
 }
 
 /**
@@ -532,8 +532,8 @@ bool CFTPClient::Info(const std::string &strRemoteFile, struct FileInfo &oFileIn
       }
 
       res = curl_easy_getinfo(m_pCurlSession, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &oFileInfo.dFileSize);
-      if (CURLE_OK == res && oFileInfo.dFileSize > 0.0) {
-         bRes = true;
+      if (CURLE_OK != res || oFileInfo.dFileSize < 0.0) {
+         bRes = false;
       }
    } else if (m_eSettingsFlags & ENABLE_LOG)
       m_oLog(StringFormat(LOG_ERROR_CURL_FILETIME_FORMAT, strRemoteFile.c_str(), res, curl_easy_strerror(res)));

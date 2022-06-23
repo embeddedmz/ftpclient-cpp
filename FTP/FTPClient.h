@@ -118,7 +118,7 @@ class CFTPClient {
    CFTPClient &operator=(CFTPClient &&) = delete;
 
    // Setters - Getters (for unit tests)
-   void SetProgressFnCallback(void *pOwner, const ProgressFnCallback &fnCallback);
+   void SetProgressFnCallback(void *pOwner, const ProgressFnCallback &fnCallback, const bool enable = true);
    void SetProxy(const std::string &strProxy);
    void SetProxyUserPwd(const std::string &strProxyUserPwd);
    inline void SetTimeout(const int &iTimeout) { m_iCurlTimeout = iTimeout; }
