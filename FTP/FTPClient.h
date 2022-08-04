@@ -42,6 +42,7 @@ class CFTPClient {
    // Public definitions
    using ProgressFnCallback = std::function<int(void *, double, double, double, double)>;
    using LogFnCallback      = std::function<void(const std::string &)>;
+   using CurlReadFn         = size_t (*) (void *, size_t, size_t, void *);
 
    // Used to download many items at once
    struct WildcardTransfersCallbackData {
@@ -164,6 +165,12 @@ class CFTPClient {
 
    bool DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const;
 
+   bool UploadFile(CurlReadFn readFn, void *userData, const std::string &strRemoteFile, const bool &bCreateDir = false,
+                   long fileSize = -1) const;
+
+   bool UploadFile(std::istream &inputStream, const std::string &strRemoteFile, const bool &bCreateDir = false,
+                   long fileSize = -1) const;
+
    bool UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir = false) const;
 
    bool AppendFile(const std::string &strLocalFile, const size_t fileOffset, const std::string &strRemoteFile,
@@ -196,7 +203,7 @@ class CFTPClient {
    // Curl callbacks
    static size_t WriteInStringCallback(void *ptr, size_t size, size_t nmemb, void *data);
    static size_t WriteToFileCallback(void *ptr, size_t size, size_t nmemb, void *data);
-   static size_t ReadFromFileCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+   static size_t ReadFromStreamCallback(void *ptr, size_t size, size_t nmemb, void *stream);
    static size_t ThrowAwayCallback(void *ptr, size_t size, size_t nmemb, void *data);
    static size_t WriteToMemory(void *ptr, size_t size, size_t nmemb, void *data);
 
