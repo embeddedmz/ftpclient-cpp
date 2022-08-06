@@ -796,7 +796,7 @@ bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::str
  * information.
  */
 bool CFTPClient::UploadFile(CFTPClient::CurlReadFn readFn, void *userData, const std::string &strRemoteFile,
-                            const bool &bCreateDir, curl_off_t fileSize) const {
+                            const bool &bCreateDir, long fileSize) const {
    if (readFn == nullptr || strRemoteFile.empty())
       return false;
 
@@ -825,7 +825,7 @@ bool CFTPClient::UploadFile(CFTPClient::CurlReadFn readFn, void *userData, const
    option you MUST make sure that the type of the passed-in argument is a
    curl_off_t. If you use CURLOPT_INFILESIZE (without _LARGE) you must
    make sure that to pass in a type 'long' argument. */
-   curl_easy_setopt(m_pCurlSession, CURLOPT_INFILESIZE_LARGE, fileSize);
+   curl_easy_setopt(m_pCurlSession, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(fileSize));
 
    /* enable uploading */
    curl_easy_setopt(m_pCurlSession, CURLOPT_UPLOAD, 1L);
@@ -858,7 +858,7 @@ bool CFTPClient::UploadFile(CFTPClient::CurlReadFn readFn, void *userData, const
  * information.
  */
 bool CFTPClient::UploadFile(std::istream &inputStream, const std::string &strRemoteFile, const bool &bCreateDir,
-                            curl_off_t fileSize) const {
+                            long fileSize) const {
    if ( !inputStream )
       return false;
 

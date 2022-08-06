@@ -166,10 +166,10 @@ class CFTPClient {
    bool DownloadWildcard(const std::string &strLocalDir, const std::string &strRemoteWildcard) const;
 
    bool UploadFile(CurlReadFn readFn, void *userData, const std::string &strRemoteFile, const bool &bCreateDir = false,
-                   curl_off_t fileSize = -1) const;
+                   long fileSize = -1) const;
 
    bool UploadFile(std::istream &inputStream, const std::string &strRemoteFile, const bool &bCreateDir = false,
-                   curl_off_t fileSize = -1) const;
+                   long fileSize = -1) const;
 
    bool UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir = false) const;
 
