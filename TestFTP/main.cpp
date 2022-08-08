@@ -461,6 +461,59 @@ TEST_F(FTPClientTest, TestUploadAndRemoveFile) {
       std::cout << "FTP tests are disabled !" << std::endl;
 }
 
+TEST_F(SFTPClientTest, TestUploadStreamAndRemove) {
+   if (SFTP_TEST_ENABLED) {
+      // to display a beautiful progress bar on console
+      m_pSFTPClient->SetProgressFnCallback(m_pSFTPClient.get(), &TestUPProgressCallback);
+
+      std::ostringstream ssTimestamp;
+      TimeStampTest(ssTimestamp);
+
+      // create dummy test file
+      std::stringstream ofTestUpload;
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      ofTestUpload << "Unit Test TestUploadFile executed on " + ssTimestamp.str() + "\n" +
+                          "This file is uploaded via FTPClient-C++ API.\n" +
+                          "If this file exists, that means that the unit test is passed.\n";
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+
+      // Upload file and create a directory "upload_test"
+      ASSERT_TRUE(m_pSFTPClient->UploadFile(ofTestUpload, SFTP_REMOTE_UPLOAD_FOLDER + "upload_test/test_upload_stream.txt", true));
+
+      /* to properly show the progress bar */
+      std::cout << std::endl;
+
+      // Upload file
+      ofTestUpload.clear();
+      ofTestUpload.seekg(0);
+      ASSERT_TRUE(static_cast<bool>(ofTestUpload));
+      ASSERT_TRUE(m_pSFTPClient->UploadFile(ofTestUpload, SFTP_REMOTE_UPLOAD_FOLDER + "test_upload_stream.txt"));
+
+      std::cout << std::endl;
+
+      // Download the uploaded file into a vector of bytes
+      {
+         std::vector<char> uploadedFileBytes;
+         EXPECT_TRUE(m_pSFTPClient->DownloadFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload_stream.txt", uploadedFileBytes));
+
+         std::cout << std::endl;
+
+         /* check the SHA1 sum of the uploaded file */
+         std::string contentStr = ofTestUpload.str();
+         std::vector<char> contentBytes(contentStr.begin(), contentStr.end() );
+         std::string expectedSha1Sum = sha1sum(contentBytes);
+         std::string resultSha1Sum   = sha1sum(uploadedFileBytes);
+
+         EXPECT_TRUE(expectedSha1Sum == resultSha1Sum);
+      }
+
+      // Remove file
+      ASSERT_TRUE(m_pSFTPClient->RemoveFile(SFTP_REMOTE_UPLOAD_FOLDER + "test_upload_stream.txt"));
+   } else
+      std::cout << "SFTP tests are disabled !" << std::endl;
+}
+
 #ifdef WINDOWS
 TEST_F(FTPClientTest, TestUploadFileNameWithAccents) {
    if (FTP_TEST_ENABLED) {

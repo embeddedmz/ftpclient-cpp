@@ -782,6 +782,90 @@ bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::str
 }
 
 /**
+ * @brief uploads a user data using readFn to a remote folder.
+ *
+ * @param [in] readFn Reading function, corresponds to <a href="https://curl.se/libcurl/c/CURLOPT_READFUNCTION.html">CURLOPT_READFUNCTION</a>.
+ * @param [in] userData user data passed to readFn as last parameter.
+ * @param [in] strRemoteFile Complete URN of the remote location (with the file
+ * name) encoded in UTF-8 format.
+ * @param [in] bCreateDir Enable or disable creation of remote missing
+ * directories contained in the URN.
+ *
+ * @retval true   Data successfully uploaded.
+ * @retval false  Data couldn't be uploaded. Check the log messages for more
+ * information.
+ */
+bool CFTPClient::UploadFile(CFTPClient::CurlReadFn readFn, void *userData, const std::string &strRemoteFile,
+                            const bool &bCreateDir, curl_off_t fileSize) const {
+   if (readFn == nullptr || strRemoteFile.empty())
+      return false;
+
+   if (!m_pCurlSession) {
+      if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
+
+      return false;
+   }
+   // Reset is mandatory to avoid bad surprises
+   curl_easy_reset(m_pCurlSession);
+
+   std::string strLocalRemoteFile = ParseURL(strRemoteFile);
+
+   bool bRes = false;
+
+   /* specify target */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strLocalRemoteFile.c_str());
+
+   /* we want to use our own read function */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_READFUNCTION, readFn);
+
+   /* now specify which file to upload */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_READDATA, userData);
+
+   /* Set the size of the file to upload (optional).  If you give a *_LARGE
+   option you MUST make sure that the type of the passed-in argument is a
+   curl_off_t. If you use CURLOPT_INFILESIZE (without _LARGE) you must
+   make sure that to pass in a type 'long' argument. */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_INFILESIZE_LARGE, fileSize);
+
+   /* enable uploading */
+   curl_easy_setopt(m_pCurlSession, CURLOPT_UPLOAD, 1L);
+
+   if (bCreateDir) curl_easy_setopt(m_pCurlSession, CURLOPT_FTP_CREATE_MISSING_DIRS, CURLFTP_CREATE_DIR);
+
+   CURLcode res = Perform();
+
+   if (res != CURLE_OK) {
+      if (m_eSettingsFlags & ENABLE_LOG)
+         m_oLog(StringFormat(LOG_ERROR_CURL_UPLOAD_FORMAT, res, curl_easy_strerror(res)));
+   } else
+      bRes = true;
+
+   return bRes;
+}
+
+/**
+ * @brief uploads data from a stream to a remote folder.
+ *
+ * @param [in] inputStream Stream containing data which will be uploaded.
+ * @param [in] strRemoteFile Complete URN of the remote location (with the file
+ * name) encoded in UTF-8 format.
+ * @param [in] bCreateDir Enable or disable creation of remote missing
+ * directories contained in the URN.
+ * @param [in] fileSize
+ *
+ * @retval true   Successfully uploaded the inputStream.
+ * @retval false  The inputStream couldn't be uploaded. Check the log messages for more
+ * information.
+ */
+bool CFTPClient::UploadFile(std::istream &inputStream, const std::string &strRemoteFile, const bool &bCreateDir,
+                            curl_off_t fileSize) const {
+   if ( !inputStream )
+      return false;
+
+   return UploadFile(ReadFromStreamCallback, static_cast<void *>(&inputStream), strRemoteFile, bCreateDir, fileSize);
+}
+
+/**
  * @brief uploads a local file to a remote folder.
  *
  * @param [in] strLocalFile Complete path of the file to upload encoded in UTF-8 format.
@@ -807,16 +891,7 @@ bool CFTPClient::DownloadWildcard(const std::string &strLocalDir, const std::str
 bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &strRemoteFile, const bool &bCreateDir) const {
    if (strLocalFile.empty() || strRemoteFile.empty()) return false;
 
-   if (!m_pCurlSession) {
-      if (m_eSettingsFlags & ENABLE_LOG) m_oLog(LOG_ERROR_CURL_NOT_INIT_MSG);
-
-      return false;
-   }
-   // Reset is mandatory to avoid bad surprises
-   curl_easy_reset(m_pCurlSession);
-
    std::ifstream InputFile;
-   std::string strLocalRemoteFile = ParseURL(strRemoteFile);
 
    struct stat file_info;
    bool bRes = false;
@@ -837,35 +912,7 @@ bool CFTPClient::UploadFile(const std::string &strLocalFile, const std::string &
          return false;
       }
 
-      /* specify target */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strLocalRemoteFile.c_str());
-
-      /* we want to use our own read function */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_READFUNCTION, ReadFromFileCallback);
-
-      /* now specify which file to upload */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_READDATA, &InputFile);
-
-      /* Set the size of the file to upload (optional).  If you give a *_LARGE
-      option you MUST make sure that the type of the passed-in argument is a
-      curl_off_t. If you use CURLOPT_INFILESIZE (without _LARGE) you must
-      make sure that to pass in a type 'long' argument. */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(file_info.st_size));
-
-      /* enable uploading */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_UPLOAD, 1L);
-
-      if (bCreateDir) curl_easy_setopt(m_pCurlSession, CURLOPT_FTP_CREATE_MISSING_DIRS, CURLFTP_CREATE_DIR);
-
-      // TODO add the possibility to rename the file upon upload finish....
-
-      CURLcode res = Perform();
-
-      if (res != CURLE_OK) {
-         if (m_eSettingsFlags & ENABLE_LOG)
-            m_oLog(StringFormat(LOG_ERROR_CURL_UPLOAD_FORMAT, strLocalFile.c_str(), res, curl_easy_strerror(res)));
-      } else
-         bRes = true;
+      bRes = UploadFile(InputFile, strRemoteFile, bCreateDir, file_info.st_size);
    }
    InputFile.close();
 
@@ -919,7 +966,7 @@ bool CFTPClient::AppendFile(const std::string &strLocalFile, const size_t fileOf
       curl_easy_setopt(m_pCurlSession, CURLOPT_URL, strLocalRemoteFile.c_str());
 
       /* we want to use our own read function */
-      curl_easy_setopt(m_pCurlSession, CURLOPT_READFUNCTION, ReadFromFileCallback);
+      curl_easy_setopt(m_pCurlSession, CURLOPT_READFUNCTION, ReadFromStreamCallback);
 
       /* now specify which file to upload */
       curl_easy_setopt(m_pCurlSession, CURLOPT_READDATA, &InputFile);
@@ -1161,13 +1208,13 @@ size_t CFTPClient::WriteToMemory(void *buff, size_t size, size_t nmemb, void *da
  * @param ptr pointer of max size (size*nmemb) to write data to it
  * @param size size parameter
  * @param nmemb memblock parameter
- * @param stream pointer to user data (file stream)
+ * @param stream pointer to user data (input stream)
  *
  * @return (size * nmemb)
  */
-size_t CFTPClient::ReadFromFileCallback(void *ptr, size_t size, size_t nmemb, void *stream) {
-   std::ifstream *pFileStream = reinterpret_cast<std::ifstream *>(stream);
-   if (pFileStream->is_open()) {
+size_t CFTPClient::ReadFromStreamCallback(void *ptr, size_t size, size_t nmemb, void *stream) {
+   auto *pFileStream = reinterpret_cast<std::istream *>(stream);
+   if (!pFileStream->fail()) {
       pFileStream->read(reinterpret_cast<char *>(ptr), size * nmemb);
       return pFileStream->gcount();
    }
