@@ -36,7 +36,7 @@ std::mutex g_mtxConsoleMutex;
 
 bool GlobalTestInit(const std::string& strConfFile) {
    CSimpleIniA ini;
-   ini.LoadFile(strConfFile.c_str());
+   if (ini.LoadFile(strConfFile.c_str()) != SI_Error::SI_OK) return false;
 
    std::string strTmp;
    strTmp = ini.GetValue("tests", "ftp", "");
