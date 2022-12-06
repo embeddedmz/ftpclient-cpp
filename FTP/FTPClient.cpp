@@ -836,7 +836,7 @@ bool CFTPClient::UploadFile(CFTPClient::CurlReadFn readFn, void *userData, const
 
    if (res != CURLE_OK) {
       if (m_eSettingsFlags & ENABLE_LOG)
-         m_oLog(StringFormat(LOG_ERROR_CURL_UPLOAD_FORMAT, res, curl_easy_strerror(res)));
+         m_oLog(StringFormat(LOG_ERROR_CURL_UPLOAD_FORMAT, strRemoteFile.c_str(), res, curl_easy_strerror(res)));
    } else
       bRes = true;
 
