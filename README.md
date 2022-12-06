@@ -311,7 +311,7 @@ Example : (Run only FTP tests)
 ftp=yes
 ; SFTP tests (not implemented) are disabled
 sftp=no
-; HTTP Proxy tests are disabled
+; HTTP Proxy tests are enabled
 http-proxy=yes
 
 [ftp]
