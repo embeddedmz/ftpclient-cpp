@@ -166,7 +166,7 @@ void CFTPClient::SetProxy(const std::string &strProxy) {
    std::string strUri = strProxy;
    std::transform(strUri.begin(), strUri.end(), strUri.begin(), ::toupper);
 
-   if (strUri.compare(0, 4, "HTTP") != 0)
+   if (strUri.compare(0, 5, "HTTP:") != 0)
       m_strProxy = "http://" + strProxy;
    else
       m_strProxy = strProxy;
@@ -208,7 +208,7 @@ std::string CFTPClient::ParseURL(const std::string &strRemoteFile) const {
    // boost::to_upper(strUri);
    std::transform(strUri.begin(), strUri.end(), strUri.begin(), ::toupper);
 
-   if (strUri.compare(0, 3, "FTP") != 0 && strUri.compare(0, 4, "SFTP") != 0) {
+   if (strUri.compare(0, 4, "FTP:") != 0 && strUri.compare(0, 5, "SFTP:") != 0) {
       switch (m_eFtpProtocol) {
          case FTP_PROTOCOL::FTP:
          case FTP_PROTOCOL::FTPES:
